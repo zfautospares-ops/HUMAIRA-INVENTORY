@@ -103,7 +103,7 @@
                     <div class="pricing-row">
                         <label>Calculation Method</label>
                         <select id="fuelMethod" onchange="toggleFuelMethod()">
-                            <option value="consumption">By Consumption (L/100km)</option>
+                            <option value="consumption">Detailed Consumption</option>
                             <option value="fixed">Fixed Cost per KM</option>
                             <option value="percentage">Percentage of Revenue</option>
                             <option value="manual">Manual Entry</option>
@@ -112,42 +112,142 @@
                     
                     <!-- Consumption Method -->
                     <div id="consumptionMethod" class="fuel-method-section">
+                        <div class="method-description">
+                            📊 Most accurate method - calculates based on actual vehicle consumption
+                        </div>
                         <div class="pricing-row">
                             <label>Fuel Price (R/L)</label>
                             <input type="number" id="fuelPrice" value="24.50" step="0.10" oninput="updatePricing()">
                         </div>
                         <div class="pricing-row">
-                            <label>Consumption (L/100km)</label>
+                            <label>Base Consumption (L/100km)</label>
                             <input type="number" id="fuelConsumption" value="15" step="0.5" oninput="updatePricing()">
+                        </div>
+                        <div class="pricing-row">
+                            <label>Load Factor</label>
+                            <select id="loadFactor" onchange="updatePricing()">
+                                <option value="1">Empty Truck (×1.0)</option>
+                                <option value="1.15" selected>Light Load (×1.15)</option>
+                                <option value="1.3">Medium Load (×1.3)</option>
+                                <option value="1.5">Heavy Load (×1.5)</option>
+                                <option value="1.8">Towing Heavy Vehicle (×1.8)</option>
+                            </select>
+                        </div>
+                        <div class="pricing-row">
+                            <label>Terrain Factor</label>
+                            <select id="terrainFactor" onchange="updatePricing()">
+                                <option value="1" selected>Flat/Highway (×1.0)</option>
+                                <option value="1.1">Mixed Terrain (×1.1)</option>
+                                <option value="1.25">Hilly/Mountain (×1.25)</option>
+                                <option value="1.15">City/Stop-Start (×1.15)</option>
+                            </select>
+                        </div>
+                        <div class="pricing-row">
+                            <label>
+                                <input type="checkbox" id="includeIdling" onchange="updatePricing()">
+                                Include Idling Time (adds 10%)
+                            </label>
+                        </div>
+                        <div class="fuel-breakdown">
+                            <div class="breakdown-item">
+                                <span>Base Fuel:</span>
+                                <span id="baseFuelCost">R 0.00</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span>Load Adjustment:</span>
+                                <span id="loadAdjustment">R 0.00</span>
+                            </div>
+                            <div class="breakdown-item">
+                                <span>Terrain Adjustment:</span>
+                                <span id="terrainAdjustment">R 0.00</span>
+                            </div>
+                            <div class="breakdown-item" id="idlingCostRow" style="display: none;">
+                                <span>Idling Cost:</span>
+                                <span id="idlingCost">R 0.00</span>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Fixed Cost Method -->
                     <div id="fixedMethod" class="fuel-method-section" style="display: none;">
+                        <div class="method-description">
+                            💡 Simple method - use your average cost per kilometer
+                        </div>
                         <div class="pricing-row">
                             <label>Fixed Cost per KM (R)</label>
                             <input type="number" id="fixedCostPerKm" value="3.50" step="0.10" oninput="updatePricing()">
+                        </div>
+                        <div class="pricing-row">
+                            <label>Include Return Trip</label>
+                            <select id="returnTrip" onchange="updatePricing()">
+                                <option value="1">One Way Only</option>
+                                <option value="2">Round Trip (×2)</option>
+                                <option value="1.5">Return Empty (×1.5)</option>
+                            </select>
+                        </div>
+                        <div class="fuel-info">
+                            💡 Tip: Calculate your average by dividing monthly fuel costs by total kilometers driven
                         </div>
                     </div>
                     
                     <!-- Percentage Method -->
                     <div id="percentageMethod" class="fuel-method-section" style="display: none;">
+                        <div class="method-description">
+                            📈 Business planning method - fuel as percentage of revenue
+                        </div>
                         <div class="pricing-row">
                             <label>Fuel % of Revenue</label>
                             <input type="number" id="fuelPercentage" value="15" step="1" min="0" max="100" oninput="updatePricing()">
+                        </div>
+                        <div class="pricing-row">
+                            <label>Include Other Costs</label>
+                            <select id="otherCosts" onchange="updatePricing()">
+                                <option value="0">Fuel Only</option>
+                                <option value="5">+ Maintenance (5%)</option>
+                                <option value="10">+ Maintenance & Wear (10%)</option>
+                                <option value="15">+ All Operating Costs (15%)</option>
+                            </select>
+                        </div>
+                        <div class="fuel-breakdown">
+                            <div class="breakdown-item">
+                                <span>Fuel Cost:</span>
+                                <span id="percentageFuelCost">R 0.00</span>
+                            </div>
+                            <div class="breakdown-item" id="otherCostsRow" style="display: none;">
+                                <span>Other Costs:</span>
+                                <span id="otherCostsAmount">R 0.00</span>
+                            </div>
+                        </div>
+                        <div class="fuel-info">
+                            💡 Industry average: 12-18% for fuel, 25-35% for total operating costs
                         </div>
                     </div>
                     
                     <!-- Manual Method -->
                     <div id="manualMethod" class="fuel-method-section" style="display: none;">
+                        <div class="method-description">
+                            ✏️ Enter exact fuel cost - for actual fill-up calculations
+                        </div>
                         <div class="pricing-row">
                             <label>Total Fuel Cost (R)</label>
                             <input type="number" id="manualFuelCost" value="0" step="10" oninput="updatePricing()">
                         </div>
+                        <div class="pricing-row">
+                            <label>Add Buffer</label>
+                            <select id="fuelBuffer" onchange="updatePricing()">
+                                <option value="0">No Buffer</option>
+                                <option value="5">+5% Safety Margin</option>
+                                <option value="10">+10% Safety Margin</option>
+                                <option value="15">+15% Safety Margin</option>
+                            </select>
+                        </div>
+                        <div class="fuel-info">
+                            💡 Tip: Fill up before job, note odometer. Fill up after, calculate difference.
+                        </div>
                     </div>
                     
                     <div class="fuel-result">
-                        <div class="fuel-label">Estimated Fuel Cost:</div>
+                        <div class="fuel-label">Total Fuel Cost:</div>
                         <div class="fuel-value" id="fuelCost">R 0.00</div>
                     </div>
                 </div>

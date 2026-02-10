@@ -381,27 +381,73 @@ function calculatePricing(distance) {
     
     switch(method) {
         case 'consumption':
-            // L/100km method
+            // Detailed consumption method
             const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0;
-            const fuelConsumption = parseFloat(document.getElementById('fuelConsumption').value) || 0;
-            fuelCost = (distance * fuelConsumption / 100) * fuelPrice;
+            const baseConsumption = parseFloat(document.getElementById('fuelConsumption').value) || 0;
+            const loadFactor = parseFloat(document.getElementById('loadFactor').value) || 1;
+            const terrainFactor = parseFloat(document.getElementById('terrainFactor').value) || 1;
+            const includeIdling = document.getElementById('includeIdling').checked;
+            
+            // Calculate base fuel cost
+            const baseFuel = (distance * baseConsumption / 100) * fuelPrice;
+            
+            // Apply load factor
+            const withLoad = baseFuel * loadFactor;
+            const loadAdj = withLoad - baseFuel;
+            
+            // Apply terrain factor
+            const withTerrain = withLoad * terrainFactor;
+            const terrainAdj = withTerrain - withLoad;
+            
+            // Apply idling if checked
+            let idlingCost = 0;
+            if (includeIdling) {
+                idlingCost = withTerrain * 0.10;
+                document.getElementById('idlingCostRow').style.display = 'flex';
+            } else {
+                document.getElementById('idlingCostRow').style.display = 'none';
+            }
+            
+            fuelCost = withTerrain + idlingCost;
+            
+            // Update breakdown
+            document.getElementById('baseFuelCost').textContent = `R ${baseFuel.toFixed(2)}`;
+            document.getElementById('loadAdjustment').textContent = `R ${loadAdj.toFixed(2)}`;
+            document.getElementById('terrainAdjustment').textContent = `R ${terrainAdj.toFixed(2)}`;
+            document.getElementById('idlingCost').textContent = `R ${idlingCost.toFixed(2)}`;
             break;
             
         case 'fixed':
-            // Fixed cost per km
+            // Fixed cost per km with return trip option
             const fixedCostPerKm = parseFloat(document.getElementById('fixedCostPerKm').value) || 0;
-            fuelCost = distance * fixedCostPerKm;
+            const returnTrip = parseFloat(document.getElementById('returnTrip').value) || 1;
+            fuelCost = distance * fixedCostPerKm * returnTrip;
             break;
             
         case 'percentage':
-            // Percentage of revenue
+            // Percentage of revenue with other costs
             const fuelPercentage = parseFloat(document.getElementById('fuelPercentage').value) || 0;
-            fuelCost = total * (fuelPercentage / 100);
+            const otherCostsPercent = parseFloat(document.getElementById('otherCosts').value) || 0;
+            
+            const fuelOnly = total * (fuelPercentage / 100);
+            const otherCostsAmount = total * (otherCostsPercent / 100);
+            fuelCost = fuelOnly + otherCostsAmount;
+            
+            // Update breakdown
+            document.getElementById('percentageFuelCost').textContent = `R ${fuelOnly.toFixed(2)}`;
+            if (otherCostsPercent > 0) {
+                document.getElementById('otherCostsRow').style.display = 'flex';
+                document.getElementById('otherCostsAmount').textContent = `R ${otherCostsAmount.toFixed(2)}`;
+            } else {
+                document.getElementById('otherCostsRow').style.display = 'none';
+            }
             break;
             
         case 'manual':
-            // Manual entry
-            fuelCost = parseFloat(document.getElementById('manualFuelCost').value) || 0;
+            // Manual entry with buffer
+            const manualCost = parseFloat(document.getElementById('manualFuelCost').value) || 0;
+            const buffer = parseFloat(document.getElementById('fuelBuffer').value) || 0;
+            fuelCost = manualCost * (1 + buffer / 100);
             break;
     }
     
@@ -465,9 +511,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('serviceType').addEventListener('change', updatePricing);
     document.getElementById('fuelPrice').addEventListener('input', updatePricing);
     document.getElementById('fuelConsumption').addEventListener('input', updatePricing);
+    document.getElementById('loadFactor').addEventListener('change', updatePricing);
+    document.getElementById('terrainFactor').addEventListener('change', updatePricing);
+    document.getElementById('includeIdling').addEventListener('change', updatePricing);
     document.getElementById('fixedCostPerKm').addEventListener('input', updatePricing);
+    document.getElementById('returnTrip').addEventListener('change', updatePricing);
     document.getElementById('fuelPercentage').addEventListener('input', updatePricing);
+    document.getElementById('otherCosts').addEventListener('change', updatePricing);
     document.getElementById('manualFuelCost').addEventListener('input', updatePricing);
+    document.getElementById('fuelBuffer').addEventListener('change', updatePricing);
     
     // Parse manual coordinate entry
     document.getElementById('fromLocation').addEventListener('change', function() {

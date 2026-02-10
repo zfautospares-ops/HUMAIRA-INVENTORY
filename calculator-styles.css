@@ -139,6 +139,51 @@ header h2 {
     border: 1px solid #ffcc80;
 }
 
+.method-description {
+    background: rgba(255,152,0,0.1);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #e65100;
+    font-weight: 500;
+}
+
+.fuel-breakdown {
+    margin-top: 15px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #ffcc80;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.breakdown-item span:first-child {
+    color: #666;
+}
+
+.breakdown-item span:last-child {
+    font-weight: 600;
+    color: #ff6f00;
+}
+
+.fuel-info {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(33,150,243,0.1);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #1565c0;
+    line-height: 1.5;
+}
+
 .fuel-result {
     margin-top: 15px;
     padding: 15px;
