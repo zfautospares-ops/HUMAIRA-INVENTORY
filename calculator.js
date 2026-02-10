@@ -2,6 +2,34 @@
 let fromCoords = null;
 let toCoords = null;
 let fromAutocomplete, toAutocomplete;
+let map, directionsService, directionsRenderer;
+let currentRoutes = [];
+let isManualDistance = false;
+
+// Initialize Google Maps
+function initMap() {
+    if (typeof google === 'undefined' || !google.maps) {
+        console.log('Google Maps not loaded.');
+        return;
+    }
+
+    // Initialize map
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 10,
+        center: { lat: -29.6, lng: 31.0 } // KZN center
+    });
+
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: false
+    });
+
+    // Initialize autocomplete
+    initAutocomplete();
+}
+
+window.initMap = initMap;
 
 // Initialize Google Maps Autocomplete
 function initAutocomplete() {
@@ -30,7 +58,7 @@ function initAutocomplete() {
                     lon: place.geometry.location.lng()
                 };
                 fromInput.value = place.formatted_address || place.name;
-                calculateAll();
+                calculateRoutes();
             }
         });
 
@@ -42,17 +70,15 @@ function initAutocomplete() {
                     lon: place.geometry.location.lng()
                 };
                 toInput.value = place.formatted_address || place.name;
-                calculateAll();
+                calculateRoutes();
             }
         });
 
-        console.log('Google Maps autocomplete initialized!');
+        console.log('Google Maps initialized!');
     } catch (error) {
         console.error('Error initializing Google Maps:', error);
     }
 }
-
-window.initAutocomplete = initAutocomplete;
 
 // Get GPS location
 function getLocation(type) {
@@ -79,7 +105,7 @@ function getLocation(type) {
                 toCoords = { lat, lon };
             }
             
-            calculateAll();
+            calculateRoutes();
             
             button.textContent = '📍 Use GPS';
             button.disabled = false;
@@ -92,7 +118,140 @@ function getLocation(type) {
     );
 }
 
-// Calculate distance using Haversine formula
+// Calculate routes using Google Directions API
+function calculateRoutes() {
+    if (!fromCoords || !toCoords || isManualDistance) {
+        // Fallback to Haversine if no Google Maps or manual mode
+        const distance = calculateDistance();
+        updateDistanceDisplay(distance);
+        calculateAll();
+        return;
+    }
+
+    if (!directionsService) {
+        // Fallback to Haversine
+        const distance = calculateDistance();
+        updateDistanceDisplay(distance);
+        calculateAll();
+        return;
+    }
+
+    const origin = new google.maps.LatLng(fromCoords.lat, fromCoords.lon);
+    const destination = new google.maps.LatLng(toCoords.lat, toCoords.lon);
+
+    const request = {
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: true,
+        unitSystem: google.maps.UnitSystem.METRIC
+    };
+
+    directionsService.route(request, function(result, status) {
+        if (status === 'OK') {
+            currentRoutes = result.routes;
+            displayRouteOptions(result.routes);
+            // Show first route by default
+            selectRoute(0);
+        } else {
+            console.error('Directions request failed:', status);
+            // Fallback to straight-line distance
+            const distance = calculateDistance();
+            updateDistanceDisplay(distance);
+            calculateAll();
+        }
+    });
+}
+
+// Display route options
+function displayRouteOptions(routes) {
+    const routeSection = document.getElementById('routeSection');
+    const routeOptions = document.getElementById('routeOptions');
+    
+    if (routes.length === 0) {
+        routeSection.style.display = 'none';
+        return;
+    }
+    
+    routeSection.style.display = 'block';
+    routeOptions.innerHTML = '';
+    
+    routes.forEach((route, index) => {
+        const leg = route.legs[0];
+        const distance = (leg.distance.value / 1000).toFixed(2);
+        const duration = leg.duration.text;
+        const summary = route.summary || `Route ${index + 1}`;
+        
+        const routeCard = document.createElement('div');
+        routeCard.className = 'route-card';
+        routeCard.innerHTML = `
+            <input type="radio" name="route" id="route${index}" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectRoute(${index})">
+            <label for="route${index}">
+                <div class="route-name">${summary}</div>
+                <div class="route-details">
+                    <span>📏 ${distance} km</span>
+                    <span>⏱️ ${duration}</span>
+                </div>
+            </label>
+        `;
+        routeOptions.appendChild(routeCard);
+    });
+}
+
+// Select a route
+function selectRoute(index) {
+    if (!currentRoutes[index]) return;
+    
+    const route = currentRoutes[index];
+    const distance = route.legs[0].distance.value / 1000;
+    
+    // Display route on map
+    directionsRenderer.setDirections({
+        routes: [route],
+        request: {
+            origin: route.legs[0].start_location,
+            destination: route.legs[0].end_location,
+            travelMode: google.maps.TravelMode.DRIVING
+        }
+    });
+    
+    updateDistanceDisplay(distance);
+    calculateAll();
+}
+
+// Update distance display
+function updateDistanceDisplay(distance) {
+    document.getElementById('distanceValue').textContent = distance.toFixed(2);
+}
+
+// Toggle manual distance input
+function toggleManualDistance() {
+    isManualDistance = document.getElementById('manualDistanceToggle').checked;
+    const manualInput = document.getElementById('manualDistanceInput');
+    const routeSection = document.getElementById('routeSection');
+    
+    if (isManualDistance) {
+        manualInput.style.display = 'block';
+        routeSection.style.display = 'none';
+        document.getElementById('manualDistance').focus();
+    } else {
+        manualInput.style.display = 'none';
+        if (fromCoords && toCoords) {
+            calculateRoutes();
+        }
+    }
+}
+
+// Update manual distance
+function updateManualDistance() {
+    if (!isManualDistance) return;
+    
+    const distance = parseFloat(document.getElementById('manualDistance').value) || 0;
+    updateDistanceDisplay(distance);
+    calculateAll();
+}
+
+// Calculate distance using Haversine formula (fallback)
 function calculateDistance() {
     if (!fromCoords || !toCoords) {
         return 0;
@@ -168,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const coords = parseCoordinates(this.value);
         if (coords) {
             fromCoords = coords;
-            calculateAll();
+            calculateRoutes();
         }
     });
     
@@ -176,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const coords = parseCoordinates(this.value);
         if (coords) {
             toCoords = coords;
-            calculateAll();
+            calculateRoutes();
         }
     });
 });
