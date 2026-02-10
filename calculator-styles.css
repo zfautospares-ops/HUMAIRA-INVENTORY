@@ -127,6 +127,48 @@ header h2 {
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
+.fuel-section {
+    background: linear-gradient(135deg, #fff5e6 0%, #ffe0b3 100%);
+}
+
+.fuel-result {
+    margin-top: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid #ff9800;
+}
+
+.fuel-label {
+    font-weight: 600;
+    color: #e65100;
+}
+
+.fuel-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ff6f00;
+}
+
+.subtotal-row {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.fuel-row {
+    color: rgba(255,255,255,0.9);
+    font-size: 16px;
+}
+
+.profit-row {
+    font-size: 22px;
+    font-weight: 700;
+    padding-top: 10px;
+}
+
 .distance-display {
     text-align: center;
     padding: 20px;
@@ -193,7 +235,7 @@ header h2 {
 .breakdown-row {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 8px 0;
     color: white;
     font-size: 15px;
 }
@@ -201,7 +243,7 @@ header h2 {
 .breakdown-divider {
     height: 2px;
     background: rgba(255,255,255,0.3);
-    margin: 15px 0;
+    margin: 10px 0;
 }
 
 .total-row {

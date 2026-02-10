@@ -144,7 +144,9 @@ function calculateRoutes() {
         destination: destination,
         travelMode: google.maps.TravelMode.DRIVING,
         provideRouteAlternatives: true,
-        unitSystem: google.maps.UnitSystem.METRIC
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false
     };
 
     console.log('Requesting routes from Google Directions API...');
@@ -154,9 +156,40 @@ function calculateRoutes() {
         
         if (status === 'OK') {
             currentRoutes = result.routes;
-            console.log('Found', currentRoutes.length, 'routes');
-            displayRouteOptions(result.routes);
-            selectRoute(0);
+            console.log('Found', currentRoutes.length, 'route(s)');
+            
+            // If only one route, try to get alternatives by avoiding highways
+            if (currentRoutes.length === 1) {
+                // Show the main route first
+                displayRouteOptions(result.routes);
+                selectRoute(0);
+                
+                // Try to get alternative route avoiding highways
+                const altRequest = {
+                    ...request,
+                    avoidHighways: true
+                };
+                
+                directionsService.route(altRequest, function(altResult, altStatus) {
+                    if (altStatus === 'OK' && altResult.routes.length > 0) {
+                        const altRoute = altResult.routes[0];
+                        const mainRoute = currentRoutes[0];
+                        
+                        // Only add if it's significantly different
+                        const mainDistance = mainRoute.legs[0].distance.value;
+                        const altDistance = altRoute.legs[0].distance.value;
+                        const difference = Math.abs(mainDistance - altDistance) / mainDistance;
+                        
+                        if (difference > 0.05) { // More than 5% different
+                            currentRoutes.push(altRoute);
+                            displayRouteOptions(currentRoutes);
+                        }
+                    }
+                });
+            } else {
+                displayRouteOptions(result.routes);
+                selectRoute(0);
+            }
         } else if (status === 'ZERO_RESULTS') {
             alert('No routes found between these locations. Using straight-line distance.');
             const distance = calculateDistance();
@@ -194,14 +227,24 @@ function displayRouteOptions(routes) {
         const leg = route.legs[0];
         const distance = (leg.distance.value / 1000).toFixed(2);
         const duration = leg.duration.text;
-        const summary = route.summary || `Route ${index + 1}`;
+        
+        // Better route naming
+        let routeName = route.summary || `Route ${index + 1}`;
+        if (routes.length === 1) {
+            routeName = '🛣️ Recommended Route';
+        } else if (index === 0) {
+            routeName = '⚡ Fastest Route';
+        } else if (route.summary.includes('avoid')) {
+            routeName = '🌳 Alternative Route (No Highways)';
+        }
         
         const routeCard = document.createElement('div');
         routeCard.className = 'route-card';
         routeCard.innerHTML = `
             <input type="radio" name="route" id="route${index}" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectRoute(${index})">
             <label for="route${index}">
-                <div class="route-name">${summary}</div>
+                <div class="route-name">${routeName}</div>
+                <div class="route-summary">${route.summary}</div>
                 <div class="route-details">
                     <span>📏 ${distance} km</span>
                     <span>⏱️ ${duration}</span>
@@ -210,6 +253,14 @@ function displayRouteOptions(routes) {
         `;
         routeOptions.appendChild(routeCard);
     });
+    
+    // Add helpful message if only one route
+    if (routes.length === 1) {
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = 'margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 13px; color: #856404;';
+        infoDiv.innerHTML = '💡 Only one practical route available for this journey.';
+        routeOptions.appendChild(infoDiv);
+    }
 }
 
 // Select a route
@@ -295,16 +346,27 @@ function calculatePricing(distance) {
     const perKmRate = parseFloat(document.getElementById('perKmRate').value) || 0;
     const serviceMultiplier = parseFloat(document.getElementById('serviceType').value) || 1;
     
+    // Calculate customer price
     const distanceCost = distance * perKmRate;
     const subtotal = baseRate + distanceCost;
     const total = subtotal * serviceMultiplier;
+    
+    // Calculate fuel cost
+    const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0;
+    const fuelConsumption = parseFloat(document.getElementById('fuelConsumption').value) || 0;
+    const fuelCost = (distance * fuelConsumption / 100) * fuelPrice;
+    
+    // Calculate profit
+    const profit = total - fuelCost;
     
     return {
         baseRate,
         perKmRate,
         distanceCost,
         serviceMultiplier,
-        total
+        total,
+        fuelCost,
+        profit
     };
 }
 
@@ -323,6 +385,23 @@ function calculateAll() {
     document.getElementById('distanceCostDisplay').textContent = `R ${pricing.distanceCost.toFixed(2)}`;
     document.getElementById('multiplierDisplay').textContent = `×${pricing.serviceMultiplier.toFixed(1)}`;
     document.getElementById('totalPrice').textContent = `R ${pricing.total.toFixed(2)}`;
+    
+    // Update fuel cost
+    document.getElementById('fuelCost').textContent = `R ${pricing.fuelCost.toFixed(2)}`;
+    document.getElementById('fuelCostDisplay').textContent = `R ${pricing.fuelCost.toFixed(2)}`;
+    
+    // Update profit
+    document.getElementById('profitDisplay').textContent = `R ${pricing.profit.toFixed(2)}`;
+    
+    // Color code profit
+    const profitElement = document.getElementById('profitDisplay');
+    if (pricing.profit < 0) {
+        profitElement.style.color = '#dc3545';
+    } else if (pricing.profit < 100) {
+        profitElement.style.color = '#ffc107';
+    } else {
+        profitElement.style.color = '#28a745';
+    }
 }
 
 // Update pricing when rates change
@@ -335,6 +414,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('baseRate').addEventListener('input', updatePricing);
     document.getElementById('perKmRate').addEventListener('input', updatePricing);
     document.getElementById('serviceType').addEventListener('change', updatePricing);
+    document.getElementById('fuelPrice').addEventListener('input', updatePricing);
+    document.getElementById('fuelConsumption').addEventListener('input', updatePricing);
     
     // Parse manual coordinate entry
     document.getElementById('fromLocation').addEventListener('change', function() {
@@ -371,10 +452,12 @@ function parseCoordinates(str) {
 function shareQuote() {
     const distance = parseFloat(document.getElementById('distanceValue').textContent);
     const total = document.getElementById('totalPrice').textContent;
+    const fuelCost = document.getElementById('fuelCostDisplay').textContent;
+    const profit = document.getElementById('profitDisplay').textContent;
     const from = document.getElementById('fromLocation').value;
     const to = document.getElementById('toLocation').value;
     
-    const message = `MH TOWING - Quote\n\nFrom: ${from}\nTo: ${to}\nDistance: ${distance.toFixed(2)} km\n\nTotal Price: ${total}\n\nContact: 061 453 2160`;
+    const message = `MH TOWING - Quote\n\nFrom: ${from}\nTo: ${to}\nDistance: ${distance.toFixed(2)} km\n\nCustomer Price: ${total}\nFuel Cost: ${fuelCost}\nProfit: ${profit}\n\nContact: 061 453 2160`;
     
     if (navigator.share) {
         navigator.share({
