@@ -101,8 +101,11 @@
                     <button type="button" class="btn-secondary" onclick="getLocation('dropoff')">📍 Use Current Location</button>
                 </div>
                 <div class="form-group">
-                    <label for="mileage">Mileage/Distance (km)</label>
-                    <input type="number" id="mileage" step="0.1">
+                    <label for="mileage">Distance (km)</label>
+                    <input type="number" id="mileage" step="0.1" readonly style="background: #f0f0f0;">
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        ℹ️ Auto-calculated when using GPS locations
+                    </small>
                 </div>
             </section>
 

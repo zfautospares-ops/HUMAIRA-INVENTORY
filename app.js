@@ -83,6 +83,9 @@ function clearSignature() {
 }
 
 // Geolocation
+let pickupCoords = null;
+let dropoffCoords = null;
+
 function getLocation(type) {
     if (!navigator.geolocation) {
         alert('Geolocation is not supported by your browser');
@@ -101,9 +104,14 @@ function getLocation(type) {
             
             if (type === 'pickup') {
                 document.getElementById('pickupLocation').value = locationString;
+                pickupCoords = { lat, lon };
             } else {
                 document.getElementById('dropoffLocation').value = locationString;
+                dropoffCoords = { lat, lon };
             }
+            
+            // Calculate distance if both locations are set
+            calculateDistance();
             
             button.textContent = '📍 Use Current Location';
             button.disabled = false;
@@ -114,6 +122,61 @@ function getLocation(type) {
             button.disabled = false;
         }
     );
+}
+
+// Calculate distance between two coordinates using Haversine formula
+function calculateDistance() {
+    if (!pickupCoords || !dropoffCoords) {
+        return;
+    }
+    
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = toRad(dropoffCoords.lat - pickupCoords.lat);
+    const dLon = toRad(dropoffCoords.lon - pickupCoords.lon);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(pickupCoords.lat)) * Math.cos(toRad(dropoffCoords.lat)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    // Update mileage field
+    document.getElementById('mileage').value = distance.toFixed(2);
+}
+
+function toRad(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+// Also allow manual location entry to trigger distance calculation
+document.getElementById('pickupLocation').addEventListener('change', function() {
+    const coords = parseCoordinates(this.value);
+    if (coords) {
+        pickupCoords = coords;
+        calculateDistance();
+    }
+});
+
+document.getElementById('dropoffLocation').addEventListener('change', function() {
+    const coords = parseCoordinates(this.value);
+    if (coords) {
+        dropoffCoords = coords;
+        calculateDistance();
+    }
+});
+
+// Parse coordinates from string format "lat, lon"
+function parseCoordinates(str) {
+    const parts = str.split(',').map(s => s.trim());
+    if (parts.length === 2) {
+        const lat = parseFloat(parts[0]);
+        const lon = parseFloat(parts[1]);
+        if (!isNaN(lat) && !isNaN(lon)) {
+            return { lat, lon };
+        }
+    }
+    return null;
 }
 
 // Photo preview
