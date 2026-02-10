@@ -171,7 +171,7 @@ function collectFormData() {
 
 function saveJobCard(jobCard) {
     // Try to save to server first
-    fetch('http://localhost:3000/api/jobcards', {
+    fetch('https://mh-towing-job-cards.onrender.com/api/jobcards', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

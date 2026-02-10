@@ -7,7 +7,7 @@ window.addEventListener('load', () => {
 });
 
 function loadStats() {
-    fetch('http://localhost:3000/api/stats')
+    fetch('https://mh-towing-job-cards.onrender.com/api/stats')
         .then(response => response.json())
         .then(data => {
             document.getElementById('totalJobs').textContent = data.totalJobs;
@@ -22,7 +22,7 @@ function loadStats() {
 }
 
 function loadJobCards() {
-    fetch('http://localhost:3000/api/jobcards')
+    fetch('https://mh-towing-job-cards.onrender.com/api/jobcards')
         .then(response => response.json())
         .then(data => {
             allJobCards = data;
@@ -86,7 +86,7 @@ function displayJobCards(jobCards) {
 }
 
 function viewJobDetails(jobId) {
-    fetch(`http://localhost:3000/api/jobcards/${jobId}`)
+    fetch(`https://mh-towing-job-cards.onrender.com/api/jobcards/${jobId}`)
         .then(response => response.json())
         .then(job => {
             const modalBody = document.getElementById('modalBody');
@@ -234,7 +234,7 @@ function deleteJob(jobId) {
         return;
     }
     
-    fetch(`http://localhost:3000/api/jobcards/${jobId}`, {
+    fetch(`https://mh-towing-job-cards.onrender.com/api/jobcards/${jobId}`, {
         method: 'DELETE'
     })
     .then(response => response.json())
