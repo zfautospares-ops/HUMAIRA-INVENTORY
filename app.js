@@ -7,7 +7,13 @@ function generateJobId() {
 
 // Initialize job card
 let currentJobId = generateJobId();
-document.getElementById('jobId').textContent = currentJobId;
+const jobIdInput = document.getElementById('jobIdInput');
+jobIdInput.value = currentJobId;
+
+// Update currentJobId when user edits the input
+jobIdInput.addEventListener('input', function() {
+    currentJobId = this.value;
+});
 
 // Signature canvas setup
 const canvas = document.getElementById('signatureCanvas');
@@ -207,7 +213,7 @@ function resetForm() {
     document.getElementById('photoPreview').innerHTML = '';
     document.getElementById('successMessage').style.display = 'none';
     currentJobId = generateJobId();
-    document.getElementById('jobId').textContent = currentJobId;
+    document.getElementById('jobIdInput').value = currentJobId;
 }
 
 // Check for saved draft on load
