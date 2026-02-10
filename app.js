@@ -98,15 +98,11 @@ function initAutocomplete() {
             fields: ['formatted_address', 'geometry', 'name']
         };
 
-        pickupAutocomplete = new google.maps.places.Autocomplete(
-            document.getElementById('pickupLocation'),
-            options
-        );
+        const pickupInput = document.getElementById('pickupLocation');
+        const dropoffInput = document.getElementById('dropoffLocation');
 
-        dropoffAutocomplete = new google.maps.places.Autocomplete(
-            document.getElementById('dropoffLocation'),
-            options
-        );
+        pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, options);
+        dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, options);
 
         // Listen for place selection
         pickupAutocomplete.addListener('place_changed', function() {
@@ -116,7 +112,7 @@ function initAutocomplete() {
                     lat: place.geometry.location.lat(),
                     lon: place.geometry.location.lng()
                 };
-                document.getElementById('pickupLocation').value = place.formatted_address || place.name;
+                pickupInput.value = place.formatted_address || place.name;
                 calculateDistance();
             }
         });
@@ -128,7 +124,7 @@ function initAutocomplete() {
                     lat: place.geometry.location.lat(),
                     lon: place.geometry.location.lng()
                 };
-                document.getElementById('dropoffLocation').value = place.formatted_address || place.name;
+                dropoffInput.value = place.formatted_address || place.name;
                 calculateDistance();
             }
         });
@@ -136,13 +132,12 @@ function initAutocomplete() {
         console.log('Google Maps autocomplete initialized successfully!');
     } catch (error) {
         console.error('Error initializing Google Maps:', error);
+        alert('Google Maps autocomplete unavailable. Please use GPS button or type address manually.');
     }
 }
 
-// Initialize autocomplete when page loads
-window.addEventListener('load', () => {
-    setTimeout(initAutocomplete, 1000); // Wait for Google Maps to load
-});
+// Make initAutocomplete available globally for callback
+window.initAutocomplete = initAutocomplete;
 
 // Geolocation
 let pickupCoords = null;

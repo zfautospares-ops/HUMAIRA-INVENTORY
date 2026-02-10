@@ -7,15 +7,20 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Google Maps API - Replace YOUR_API_KEY with your actual key -->
     <!-- Get free key at: https://console.cloud.google.com/ -->
+    <!-- Google Maps API - Replace YOUR_API_KEY with your actual key -->
+    <!-- Get free key at: https://console.cloud.google.com/ -->
     <script>
         // Set your Google Maps API key here
         const GOOGLE_MAPS_API_KEY = 'AIzaSyArc6Vzj2uzOK29RVvIJePIN9bS6yLPv1E';
         
         if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== 'YOUR_API_KEY_HERE') {
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
             script.async = true;
             script.defer = true;
+            script.onerror = function() {
+                console.error('Failed to load Google Maps. Check your API key and enabled APIs.');
+            };
             document.head.appendChild(script);
         } else {
             console.log('Google Maps API key not configured. Address autocomplete disabled.');
