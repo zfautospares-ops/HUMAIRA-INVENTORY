@@ -1,0 +1,309 @@
+let allJobCards = [];
+
+// Load data on page load
+window.addEventListener('load', () => {
+    loadStats();
+    loadJobCards();
+});
+
+function loadStats() {
+    fetch('http://localhost:3000/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalJobs').textContent = data.totalJobs;
+            document.getElementById('todayJobs').textContent = data.todayJobs;
+            
+            const towJobs = data.byServiceType.find(s => s.service_type === 'tow');
+            document.getElementById('towJobs').textContent = towJobs ? towJobs.count : 0;
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+        });
+}
+
+function loadJobCards() {
+    fetch('http://localhost:3000/api/jobcards')
+        .then(response => response.json())
+        .then(data => {
+            allJobCards = data;
+            displayJobCards(data);
+        })
+        .catch(error => {
+            console.error('Error loading job cards:', error);
+            document.getElementById('jobCardsContainer').innerHTML = 
+                '<div class="loading">❌ Error loading job cards. Make sure the server is running.</div>';
+        });
+}
+
+function displayJobCards(jobCards) {
+    const container = document.getElementById('jobCardsContainer');
+    
+    if (jobCards.length === 0) {
+        container.innerHTML = '<div class="loading">No job cards found.</div>';
+        return;
+    }
+    
+    container.innerHTML = jobCards.map(job => `
+        <div class="job-card-item" onclick="viewJobDetails('${job.jobId}')">
+            <div class="job-card-header">
+                <div class="job-id">Job #${job.jobId}</div>
+                <div class="job-date">${formatDate(job.created_at)}</div>
+            </div>
+            <div class="job-details">
+                <div class="detail-item">
+                    <div class="detail-label">Customer</div>
+                    <div class="detail-value">${job.customer.name}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value">${job.customer.phone}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Vehicle</div>
+                    <div class="detail-value">${job.vehicle.make} ${job.vehicle.model}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">License Plate</div>
+                    <div class="detail-value">${job.vehicle.licensePlate}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Service</div>
+                    <div class="detail-value">
+                        <span class="service-badge service-${job.service.type}">${formatServiceType(job.service.type)}</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Pickup Location</div>
+                    <div class="detail-value">${truncate(job.service.pickupLocation, 30)}</div>
+                </div>
+            </div>
+            <div class="job-actions" onclick="event.stopPropagation()">
+                <button class="btn-view" onclick="viewJobDetails('${job.jobId}')">👁️ View Details</button>
+                <button class="btn-delete" onclick="deleteJob('${job.jobId}')">🗑️ Delete</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function viewJobDetails(jobId) {
+    fetch(`http://localhost:3000/api/jobcards/${jobId}`)
+        .then(response => response.json())
+        .then(job => {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <h2>Job Card Details</h2>
+                <div class="modal-section">
+                    <h3>Job Information</h3>
+                    <div class="modal-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Job ID</div>
+                            <div class="detail-value">${job.jobId}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Date</div>
+                            <div class="detail-value">${formatDate(job.created_at)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h3>Customer Information</h3>
+                    <div class="modal-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Name</div>
+                            <div class="detail-value">${job.customer.name}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Phone</div>
+                            <div class="detail-value">${job.customer.phone}</div>
+                        </div>
+                        ${job.customer.email ? `
+                        <div class="detail-item">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value">${job.customer.email}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h3>Vehicle Information</h3>
+                    <div class="modal-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Make & Model</div>
+                            <div class="detail-value">${job.vehicle.make} ${job.vehicle.model}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Year</div>
+                            <div class="detail-value">${job.vehicle.year || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Color</div>
+                            <div class="detail-value">${job.vehicle.color || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">License Plate</div>
+                            <div class="detail-value">${job.vehicle.licensePlate}</div>
+                        </div>
+                        ${job.vehicle.vin ? `
+                        <div class="detail-item">
+                            <div class="detail-label">VIN</div>
+                            <div class="detail-value">${job.vehicle.vin}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="modal-section">
+                    <h3>Service Details</h3>
+                    <div class="modal-grid">
+                        <div class="detail-item">
+                            <div class="detail-label">Service Type</div>
+                            <div class="detail-value">
+                                <span class="service-badge service-${job.service.type}">${formatServiceType(job.service.type)}</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Mileage</div>
+                            <div class="detail-value">${job.service.mileage ? job.service.mileage + ' km' : 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="modal-grid" style="margin-top: 15px;">
+                        <div class="detail-item">
+                            <div class="detail-label">Pickup Location</div>
+                            <div class="detail-value">${job.service.pickupLocation}</div>
+                        </div>
+                        ${job.service.dropoffLocation ? `
+                        <div class="detail-item">
+                            <div class="detail-label">Drop-off Location</div>
+                            <div class="detail-value">${job.service.dropoffLocation}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${job.notes.driver || job.notes.damage ? `
+                <div class="modal-section">
+                    <h3>Notes</h3>
+                    ${job.notes.driver ? `
+                    <div class="detail-item" style="margin-bottom: 15px;">
+                        <div class="detail-label">Driver Notes</div>
+                        <div class="detail-value">${job.notes.driver}</div>
+                    </div>
+                    ` : ''}
+                    ${job.notes.damage ? `
+                    <div class="detail-item">
+                        <div class="detail-label">Pre-existing Damage</div>
+                        <div class="detail-value">${job.notes.damage}</div>
+                    </div>
+                    ` : ''}
+                </div>
+                ` : ''}
+
+                ${job.signature ? `
+                <div class="modal-section">
+                    <h3>Customer Signature</h3>
+                    <img src="${job.signature}" class="signature-preview" alt="Customer Signature">
+                </div>
+                ` : ''}
+
+                ${job.photos && job.photos.length > 0 ? `
+                <div class="modal-section">
+                    <h3>Vehicle Photos</h3>
+                    <div class="photos-grid">
+                        ${job.photos.map(photo => `<img src="${photo}" alt="Vehicle Photo">`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('jobModal').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error loading job details:', error);
+            alert('Error loading job details');
+        });
+}
+
+function closeModal() {
+    document.getElementById('jobModal').style.display = 'none';
+}
+
+function deleteJob(jobId) {
+    if (!confirm('Are you sure you want to delete this job card?')) {
+        return;
+    }
+    
+    fetch(`http://localhost:3000/api/jobcards/${jobId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Job card deleted successfully');
+            refreshData();
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting job:', error);
+        alert('Error deleting job card');
+    });
+}
+
+function refreshData() {
+    loadStats();
+    loadJobCards();
+}
+
+function filterJobs() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const serviceFilter = document.getElementById('serviceFilter').value;
+    
+    let filtered = allJobCards;
+    
+    if (searchTerm) {
+        filtered = filtered.filter(job => 
+            job.customer.name.toLowerCase().includes(searchTerm) ||
+            job.customer.phone.includes(searchTerm) ||
+            job.jobId.toLowerCase().includes(searchTerm) ||
+            job.vehicle.make.toLowerCase().includes(searchTerm) ||
+            job.vehicle.model.toLowerCase().includes(searchTerm) ||
+            job.vehicle.licensePlate.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (serviceFilter) {
+        filtered = filtered.filter(job => job.service.type === serviceFilter);
+    }
+    
+    displayJobCards(filtered);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function formatServiceType(type) {
+    return type.split('-').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+function truncate(str, length) {
+    return str.length > length ? str.substring(0, length) + '...' : str;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('jobModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+}

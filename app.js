@@ -1,0 +1,239 @@
+// Generate unique job ID
+function generateJobId() {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    return `${timestamp}-${random}`;
+}
+
+// Initialize job card
+let currentJobId = generateJobId();
+document.getElementById('jobId').textContent = currentJobId;
+
+// Signature canvas setup
+const canvas = document.getElementById('signatureCanvas');
+const ctx = canvas.getContext('2d');
+let isDrawing = false;
+let hasSignature = false;
+
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Signature drawing
+function startDrawing(e) {
+    isDrawing = true;
+    hasSignature = true;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+}
+
+function stopDrawing() {
+    isDrawing = false;
+}
+
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('touchstart', startDrawing);
+canvas.addEventListener('touchmove', draw);
+canvas.addEventListener('touchend', stopDrawing);
+
+function clearSignature() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSignature = false;
+}
+
+// Geolocation
+function getLocation(type) {
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser');
+        return;
+    }
+
+    const button = event.target;
+    button.textContent = '📍 Getting location...';
+    button.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const locationString = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            
+            if (type === 'pickup') {
+                document.getElementById('pickupLocation').value = locationString;
+            } else {
+                document.getElementById('dropoffLocation').value = locationString;
+            }
+            
+            button.textContent = '📍 Use Current Location';
+            button.disabled = false;
+        },
+        (error) => {
+            alert('Unable to get location: ' + error.message);
+            button.textContent = '📍 Use Current Location';
+            button.disabled = false;
+        }
+    );
+}
+
+// Photo preview
+document.getElementById('vehiclePhotos').addEventListener('change', function(e) {
+    const preview = document.getElementById('photoPreview');
+    preview.innerHTML = '';
+    
+    Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+// Form submission
+document.getElementById('jobCardForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!hasSignature) {
+        if (!confirm('No signature captured. Continue anyway?')) {
+            return;
+        }
+    }
+    
+    const jobCard = collectFormData();
+    saveJobCard(jobCard);
+    
+    document.getElementById('successMessage').style.display = 'block';
+    setTimeout(() => {
+        if (confirm('Job card saved! Start a new job card?')) {
+            resetForm();
+        }
+    }, 1500);
+});
+
+function collectFormData() {
+    const formData = {
+        jobId: currentJobId,
+        timestamp: new Date().toISOString(),
+        customer: {
+            name: document.getElementById('customerName').value,
+            phone: document.getElementById('customerPhone').value,
+            email: document.getElementById('customerEmail').value
+        },
+        vehicle: {
+            make: document.getElementById('vehicleMake').value,
+            model: document.getElementById('vehicleModel').value,
+            year: document.getElementById('vehicleYear').value,
+            color: document.getElementById('vehicleColor').value,
+            licensePlate: document.getElementById('licensePlate').value,
+            vin: document.getElementById('vin').value
+        },
+        service: {
+            type: document.getElementById('serviceType').value,
+            pickupLocation: document.getElementById('pickupLocation').value,
+            dropoffLocation: document.getElementById('dropoffLocation').value,
+            mileage: document.getElementById('mileage').value
+        },
+        notes: {
+            driver: document.getElementById('driverNotes').value,
+            damage: document.getElementById('damageNotes').value
+        },
+        signature: hasSignature ? canvas.toDataURL() : null,
+        photos: []
+    };
+    
+    return formData;
+}
+
+function saveJobCard(jobCard) {
+    // Try to save to server first
+    fetch('http://localhost:3000/api/jobcards', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jobCard)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Job card saved to server:', data.jobId);
+        } else {
+            throw new Error('Server save failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving to server, saving locally:', error);
+        // Fallback to localStorage if server is unavailable
+        const savedJobs = JSON.parse(localStorage.getItem('jobCards') || '[]');
+        savedJobs.push(jobCard);
+        localStorage.setItem('jobCards', JSON.stringify(savedJobs));
+    });
+}
+
+function saveDraft() {
+    const jobCard = collectFormData();
+    localStorage.setItem('draftJobCard', JSON.stringify(jobCard));
+    alert('Draft saved!');
+}
+
+function resetForm() {
+    document.getElementById('jobCardForm').reset();
+    clearSignature();
+    document.getElementById('photoPreview').innerHTML = '';
+    document.getElementById('successMessage').style.display = 'none';
+    currentJobId = generateJobId();
+    document.getElementById('jobId').textContent = currentJobId;
+}
+
+// Check for saved draft on load
+window.addEventListener('load', () => {
+    const draft = localStorage.getItem('draftJobCard');
+    if (draft && confirm('Found a saved draft. Load it?')) {
+        const jobCard = JSON.parse(draft);
+        // Populate form with draft data
+        document.getElementById('customerName').value = jobCard.customer.name || '';
+        document.getElementById('customerPhone').value = jobCard.customer.phone || '';
+        // ... populate other fields as needed
+        localStorage.removeItem('draftJobCard');
+    }
+});
+
+// Offline detection
+window.addEventListener('online', () => {
+    const indicator = document.querySelector('.offline-indicator');
+    if (indicator) indicator.remove();
+});
+
+window.addEventListener('offline', () => {
+    if (!document.querySelector('.offline-indicator')) {
+        const indicator = document.createElement('div');
+        indicator.className = 'offline-indicator';
+        indicator.textContent = '⚠️ Offline Mode';
+        document.body.appendChild(indicator);
+    }
+});

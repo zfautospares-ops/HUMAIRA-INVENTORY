@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tow Truck Job Card</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="company-info">
+                <h1>MH TOWING</h1>
+                <div class="company-details">
+                    <div>📞 061 453 2160</div>
+                    <div>📍 784 Gopalall Hurbans, Tongaat, KZN</div>
+                </div>
+            </div>
+            <div class="job-card-title">
+                <h2>📋 Digital Job Card</h2>
+                <div id="jobNumber">Job #<span id="jobId">-</span></div>
+            </div>
+        </header>
+
+        <form id="jobCardForm">
+            <!-- Customer Information -->
+            <section class="form-section">
+                <h2>Customer Information</h2>
+                <div class="form-group">
+                    <label for="customerName">Name *</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerPhone">Phone *</label>
+                    <input type="tel" id="customerPhone" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Email</label>
+                    <input type="email" id="customerEmail">
+                </div>
+            </section>
+
+            <!-- Vehicle Information -->
+            <section class="form-section">
+                <h2>Vehicle Information</h2>
+                <div class="form-group">
+                    <label for="vehicleMake">Make *</label>
+                    <input type="text" id="vehicleMake" required>
+                </div>
+                <div class="form-group">
+                    <label for="vehicleModel">Model *</label>
+                    <input type="text" id="vehicleModel" required>
+                </div>
+                <div class="form-group">
+                    <label for="vehicleYear">Year</label>
+                    <input type="number" id="vehicleYear" min="1900" max="2030">
+                </div>
+                <div class="form-group">
+                    <label for="vehicleColor">Color</label>
+                    <input type="text" id="vehicleColor">
+                </div>
+                <div class="form-group">
+                    <label for="licensePlate">License Plate *</label>
+                    <input type="text" id="licensePlate" required>
+                </div>
+                <div class="form-group">
+                    <label for="vin">VIN</label>
+                    <input type="text" id="vin" maxlength="17">
+                </div>
+            </section>
+
+            <!-- Service Details -->
+            <section class="form-section">
+                <h2>Service Details</h2>
+                <div class="form-group">
+                    <label for="serviceType">Service Type *</label>
+                    <select id="serviceType" required>
+                        <option value="">Select service...</option>
+                        <option value="tow">🚗 Tow Service</option>
+                        <option value="jumpstart">⚡ Jump Start</option>
+                        <option value="tire-change">🔧 Tire Change</option>
+                        <option value="lockout">🔑 Lockout Service</option>
+                        <option value="fuel-delivery">⛽ Fuel Delivery</option>
+                        <option value="winch-out">🪝 Winch Out</option>
+                        <option value="flatbed">🛻 Flatbed Tow</option>
+                        <option value="accident-recovery">🚨 Accident Recovery</option>
+                        <option value="battery-replacement">🔋 Battery Replacement</option>
+                        <option value="other">📋 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pickupLocation">Pickup Location *</label>
+                    <input type="text" id="pickupLocation" required>
+                    <button type="button" class="btn-secondary" onclick="getLocation('pickup')">📍 Use Current Location</button>
+                </div>
+                <div class="form-group">
+                    <label for="dropoffLocation">Drop-off Location</label>
+                    <input type="text" id="dropoffLocation">
+                    <button type="button" class="btn-secondary" onclick="getLocation('dropoff')">📍 Use Current Location</button>
+                </div>
+                <div class="form-group">
+                    <label for="mileage">Mileage/Distance (km)</label>
+                    <input type="number" id="mileage" step="0.1">
+                </div>
+            </section>
+
+            <!-- Photos -->
+            <section class="form-section">
+                <h2>Vehicle Photos</h2>
+                <div class="form-group">
+                    <label for="vehiclePhotos">Take Photos</label>
+                    <input type="file" id="vehiclePhotos" accept="image/*" multiple capture="environment">
+                    <div id="photoPreview" class="photo-preview"></div>
+                </div>
+            </section>
+
+            <!-- Driver Notes -->
+            <section class="form-section">
+                <h2>Driver Notes</h2>
+                <div class="form-group">
+                    <label for="driverNotes">Notes</label>
+                    <textarea id="driverNotes" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="damageNotes">Pre-existing Damage</label>
+                    <textarea id="damageNotes" rows="3"></textarea>
+                </div>
+            </section>
+
+            <!-- Customer Signature -->
+            <section class="form-section">
+                <h2>Customer Signature</h2>
+                <div class="signature-container">
+                    <canvas id="signatureCanvas"></canvas>
+                    <button type="button" class="btn-secondary" onclick="clearSignature()">Clear Signature</button>
+                </div>
+            </section>
+
+            <!-- Submit -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Complete Job Card</button>
+                <button type="button" class="btn-secondary" onclick="saveDraft()">Save Draft</button>
+            </div>
+        </form>
+
+        <div id="successMessage" class="success-message" style="display: none;">
+            ✅ Job card saved successfully!
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
