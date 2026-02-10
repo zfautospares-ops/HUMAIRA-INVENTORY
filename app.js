@@ -5,10 +5,22 @@ function generateJobId() {
     return `${timestamp}-${random}`;
 }
 
-// Initialize job card
+// Initialize job card with sequential number
 let currentJobId = generateJobId();
 const jobIdInput = document.getElementById('jobIdInput');
-jobIdInput.value = currentJobId;
+
+// Fetch next sequential job number from server
+fetch('https://mh-towing-job-cards.onrender.com/api/next-job-number')
+    .then(response => response.json())
+    .then(data => {
+        currentJobId = data.jobNumber;
+        jobIdInput.value = data.jobNumber;
+    })
+    .catch(error => {
+        console.error('Error fetching job number:', error);
+        // Fallback to timestamp-based ID
+        jobIdInput.value = currentJobId;
+    });
 
 // Update currentJobId when user edits the input
 jobIdInput.addEventListener('input', function() {
@@ -212,8 +224,19 @@ function resetForm() {
     clearSignature();
     document.getElementById('photoPreview').innerHTML = '';
     document.getElementById('successMessage').style.display = 'none';
-    currentJobId = generateJobId();
-    document.getElementById('jobIdInput').value = currentJobId;
+    
+    // Fetch next sequential job number
+    fetch('https://mh-towing-job-cards.onrender.com/api/next-job-number')
+        .then(response => response.json())
+        .then(data => {
+            currentJobId = data.jobNumber;
+            document.getElementById('jobIdInput').value = data.jobNumber;
+        })
+        .catch(error => {
+            console.error('Error fetching job number:', error);
+            currentJobId = generateJobId();
+            document.getElementById('jobIdInput').value = currentJobId;
+        });
 }
 
 // Check for saved draft on load

@@ -129,6 +129,20 @@ app.get('/api/stats', (req, res) => {
     }
 });
 
+// Get next job number
+app.get('/api/next-job-number', (req, res) => {
+    try {
+        const jobCards = readJobCards();
+        const nextNumber = jobCards.length + 1;
+        const year = new Date().getFullYear();
+        const jobNumber = `MHT-${year}-${String(nextNumber).padStart(4, '0')}`;
+        res.json({ jobNumber, nextNumber });
+    } catch (error) {
+        console.error('Error generating job number:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Admin dashboard: http://localhost:${PORT}/admin.html`);
