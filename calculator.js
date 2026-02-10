@@ -120,16 +120,16 @@ function getLocation(type) {
 
 // Calculate routes using Google Directions API
 function calculateRoutes() {
-    if (!fromCoords || !toCoords || isManualDistance) {
-        // Fallback to Haversine if no Google Maps or manual mode
-        const distance = calculateDistance();
-        updateDistanceDisplay(distance);
-        calculateAll();
+    if (isManualDistance) {
+        return; // Skip if manual mode
+    }
+
+    if (!fromCoords || !toCoords) {
         return;
     }
 
     if (!directionsService) {
-        // Fallback to Haversine
+        console.log('Directions service not available, using straight-line distance');
         const distance = calculateDistance();
         updateDistanceDisplay(distance);
         calculateAll();
@@ -147,15 +147,29 @@ function calculateRoutes() {
         unitSystem: google.maps.UnitSystem.METRIC
     };
 
+    console.log('Requesting routes from Google Directions API...');
+
     directionsService.route(request, function(result, status) {
+        console.log('Directions API status:', status);
+        
         if (status === 'OK') {
             currentRoutes = result.routes;
+            console.log('Found', currentRoutes.length, 'routes');
             displayRouteOptions(result.routes);
-            // Show first route by default
             selectRoute(0);
+        } else if (status === 'ZERO_RESULTS') {
+            alert('No routes found between these locations. Using straight-line distance.');
+            const distance = calculateDistance();
+            updateDistanceDisplay(distance);
+            calculateAll();
+        } else if (status === 'REQUEST_DENIED') {
+            alert('Google Directions API not enabled. Please enable "Directions API" in Google Cloud Console.\n\nUsing straight-line distance for now.');
+            const distance = calculateDistance();
+            updateDistanceDisplay(distance);
+            calculateAll();
         } else {
             console.error('Directions request failed:', status);
-            // Fallback to straight-line distance
+            alert('Could not calculate route. Using straight-line distance.');
             const distance = calculateDistance();
             updateDistanceDisplay(distance);
             calculateAll();
