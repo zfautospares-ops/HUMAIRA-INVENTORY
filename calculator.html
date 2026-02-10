@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MH Towing - Distance & Price Calculator</title>
+    <link rel="stylesheet" href="calculator-styles.css">
+    <script>
+        const GOOGLE_MAPS_API_KEY = 'AIzaSyArc6Vzj2uzOK29RVvIJePIN9bS6yLPv1E';
+        
+        if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== 'YOUR_API_KEY_HERE') {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="company-info">
+                <h1>MH TOWING</h1>
+                <div class="company-details">
+                    <div>📞 061 453 2160</div>
+                </div>
+            </div>
+            <h2>🧮 Distance & Price Calculator</h2>
+        </header>
+
+        <div class="calculator-card">
+            <!-- Location Inputs -->
+            <div class="section">
+                <h3>📍 Locations</h3>
+                <div class="form-group">
+                    <label>From (Pickup)</label>
+                    <input type="text" id="fromLocation" placeholder="Start typing address...">
+                    <button class="btn-gps" onclick="getLocation('from')">📍 Use GPS</button>
+                </div>
+                <div class="form-group">
+                    <label>To (Drop-off)</label>
+                    <input type="text" id="toLocation" placeholder="Start typing address...">
+                    <button class="btn-gps" onclick="getLocation('to')">📍 Use GPS</button>
+                </div>
+            </div>
+
+            <!-- Distance Display -->
+            <div class="section result-section">
+                <h3>📏 Distance</h3>
+                <div class="distance-display">
+                    <span class="distance-value" id="distanceValue">0.00</span>
+                    <span class="distance-unit">km</span>
+                </div>
+            </div>
+
+            <!-- Pricing Section -->
+            <div class="section">
+                <h3>💰 Pricing</h3>
+                <div class="pricing-options">
+                    <div class="pricing-row">
+                        <label>Base Rate (R)</label>
+                        <input type="number" id="baseRate" value="350" step="10">
+                    </div>
+                    <div class="pricing-row">
+                        <label>Per KM Rate (R)</label>
+                        <input type="number" id="perKmRate" value="25" step="1">
+                    </div>
+                    <div class="pricing-row">
+                        <label>Service Type</label>
+                        <select id="serviceType" onchange="updatePricing()">
+                            <option value="1">Standard Tow</option>
+                            <option value="1.2">Heavy Duty (+20%)</option>
+                            <option value="1.5">Accident Recovery (+50%)</option>
+                            <option value="0.8">Local Tow (-20%)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Price Display -->
+            <div class="section total-section">
+                <div class="total-breakdown">
+                    <div class="breakdown-row">
+                        <span>Base Rate:</span>
+                        <span id="baseRateDisplay">R 350.00</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>Distance (<span id="kmDisplay">0.00</span> km × R <span id="rateDisplay">25</span>):</span>
+                        <span id="distanceCostDisplay">R 0.00</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>Service Multiplier:</span>
+                        <span id="multiplierDisplay">×1.0</span>
+                    </div>
+                    <div class="breakdown-divider"></div>
+                    <div class="breakdown-row total-row">
+                        <span>TOTAL PRICE:</span>
+                        <span id="totalPrice">R 350.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions">
+                <button class="btn-calculate" onclick="calculateAll()">🔄 Recalculate</button>
+                <button class="btn-share" onclick="shareQuote()">📤 Share Quote</button>
+                <button class="btn-reset" onclick="resetCalculator()">🔄 Reset</button>
+            </div>
+
+            <!-- Quick Link -->
+            <div class="quick-link">
+                <a href="index.html">📋 Create Job Card</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="calculator.js"></script>
+</body>
+</html>
