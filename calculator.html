@@ -101,13 +101,51 @@
                 <h3>⛽ Fuel Cost Calculator</h3>
                 <div class="pricing-options">
                     <div class="pricing-row">
-                        <label>Fuel Price (R/L)</label>
-                        <input type="number" id="fuelPrice" value="24.50" step="0.10" oninput="updatePricing()">
+                        <label>Calculation Method</label>
+                        <select id="fuelMethod" onchange="toggleFuelMethod()">
+                            <option value="consumption">By Consumption (L/100km)</option>
+                            <option value="fixed">Fixed Cost per KM</option>
+                            <option value="percentage">Percentage of Revenue</option>
+                            <option value="manual">Manual Entry</option>
+                        </select>
                     </div>
-                    <div class="pricing-row">
-                        <label>Consumption (L/100km)</label>
-                        <input type="number" id="fuelConsumption" value="15" step="0.5" oninput="updatePricing()">
+                    
+                    <!-- Consumption Method -->
+                    <div id="consumptionMethod" class="fuel-method-section">
+                        <div class="pricing-row">
+                            <label>Fuel Price (R/L)</label>
+                            <input type="number" id="fuelPrice" value="24.50" step="0.10" oninput="updatePricing()">
+                        </div>
+                        <div class="pricing-row">
+                            <label>Consumption (L/100km)</label>
+                            <input type="number" id="fuelConsumption" value="15" step="0.5" oninput="updatePricing()">
+                        </div>
                     </div>
+                    
+                    <!-- Fixed Cost Method -->
+                    <div id="fixedMethod" class="fuel-method-section" style="display: none;">
+                        <div class="pricing-row">
+                            <label>Fixed Cost per KM (R)</label>
+                            <input type="number" id="fixedCostPerKm" value="3.50" step="0.10" oninput="updatePricing()">
+                        </div>
+                    </div>
+                    
+                    <!-- Percentage Method -->
+                    <div id="percentageMethod" class="fuel-method-section" style="display: none;">
+                        <div class="pricing-row">
+                            <label>Fuel % of Revenue</label>
+                            <input type="number" id="fuelPercentage" value="15" step="1" min="0" max="100" oninput="updatePricing()">
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Method -->
+                    <div id="manualMethod" class="fuel-method-section" style="display: none;">
+                        <div class="pricing-row">
+                            <label>Total Fuel Cost (R)</label>
+                            <input type="number" id="manualFuelCost" value="0" step="10" oninput="updatePricing()">
+                        </div>
+                    </div>
+                    
                     <div class="fuel-result">
                         <div class="fuel-label">Estimated Fuel Cost:</div>
                         <div class="fuel-value" id="fuelCost">R 0.00</div>

@@ -340,6 +340,30 @@ function toRad(degrees) {
     return degrees * (Math.PI / 180);
 }
 
+// Toggle fuel calculation method
+function toggleFuelMethod() {
+    const method = document.getElementById('fuelMethod').value;
+    
+    // Hide all method sections
+    document.getElementById('consumptionMethod').style.display = 'none';
+    document.getElementById('fixedMethod').style.display = 'none';
+    document.getElementById('percentageMethod').style.display = 'none';
+    document.getElementById('manualMethod').style.display = 'none';
+    
+    // Show selected method
+    if (method === 'consumption') {
+        document.getElementById('consumptionMethod').style.display = 'block';
+    } else if (method === 'fixed') {
+        document.getElementById('fixedMethod').style.display = 'block';
+    } else if (method === 'percentage') {
+        document.getElementById('percentageMethod').style.display = 'block';
+    } else if (method === 'manual') {
+        document.getElementById('manualMethod').style.display = 'block';
+    }
+    
+    updatePricing();
+}
+
 // Calculate pricing
 function calculatePricing(distance) {
     const baseRate = parseFloat(document.getElementById('baseRate').value) || 0;
@@ -351,10 +375,35 @@ function calculatePricing(distance) {
     const subtotal = baseRate + distanceCost;
     const total = subtotal * serviceMultiplier;
     
-    // Calculate fuel cost
-    const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0;
-    const fuelConsumption = parseFloat(document.getElementById('fuelConsumption').value) || 0;
-    const fuelCost = (distance * fuelConsumption / 100) * fuelPrice;
+    // Calculate fuel cost based on selected method
+    let fuelCost = 0;
+    const method = document.getElementById('fuelMethod').value;
+    
+    switch(method) {
+        case 'consumption':
+            // L/100km method
+            const fuelPrice = parseFloat(document.getElementById('fuelPrice').value) || 0;
+            const fuelConsumption = parseFloat(document.getElementById('fuelConsumption').value) || 0;
+            fuelCost = (distance * fuelConsumption / 100) * fuelPrice;
+            break;
+            
+        case 'fixed':
+            // Fixed cost per km
+            const fixedCostPerKm = parseFloat(document.getElementById('fixedCostPerKm').value) || 0;
+            fuelCost = distance * fixedCostPerKm;
+            break;
+            
+        case 'percentage':
+            // Percentage of revenue
+            const fuelPercentage = parseFloat(document.getElementById('fuelPercentage').value) || 0;
+            fuelCost = total * (fuelPercentage / 100);
+            break;
+            
+        case 'manual':
+            // Manual entry
+            fuelCost = parseFloat(document.getElementById('manualFuelCost').value) || 0;
+            break;
+    }
     
     // Calculate profit
     const profit = total - fuelCost;
@@ -416,6 +465,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('serviceType').addEventListener('change', updatePricing);
     document.getElementById('fuelPrice').addEventListener('input', updatePricing);
     document.getElementById('fuelConsumption').addEventListener('input', updatePricing);
+    document.getElementById('fixedCostPerKm').addEventListener('input', updatePricing);
+    document.getElementById('fuelPercentage').addEventListener('input', updatePricing);
+    document.getElementById('manualFuelCost').addEventListener('input', updatePricing);
     
     // Parse manual coordinate entry
     document.getElementById('fromLocation').addEventListener('change', function() {
