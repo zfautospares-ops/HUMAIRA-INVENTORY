@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tow Truck Job Card</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Google Maps API - Replace YOUR_API_KEY with your actual key -->
+    <!-- Get free key at: https://console.cloud.google.com/ -->
+    <script>
+        // Set your Google Maps API key here
+        const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
+        
+        if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== 'YOUR_API_KEY_HERE') {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        } else {
+            console.log('Google Maps API key not configured. Address autocomplete disabled.');
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -92,13 +108,13 @@
                 </div>
                 <div class="form-group">
                     <label for="pickupLocation">Pickup Location *</label>
-                    <input type="text" id="pickupLocation" required>
-                    <button type="button" class="btn-secondary" onclick="getLocation('pickup')">📍 Use Current Location</button>
+                    <input type="text" id="pickupLocation" placeholder="Start typing address..." required>
+                    <button type="button" class="btn-secondary" onclick="getLocation('pickup')">📍 Use Current GPS</button>
                 </div>
                 <div class="form-group">
                     <label for="dropoffLocation">Drop-off Location</label>
-                    <input type="text" id="dropoffLocation">
-                    <button type="button" class="btn-secondary" onclick="getLocation('dropoff')">📍 Use Current Location</button>
+                    <input type="text" id="dropoffLocation" placeholder="Start typing address...">
+                    <button type="button" class="btn-secondary" onclick="getLocation('dropoff')">📍 Use Current GPS</button>
                 </div>
                 <div class="form-group">
                     <label for="mileage">Distance (km)</label>

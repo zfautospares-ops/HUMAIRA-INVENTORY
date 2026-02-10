@@ -82,6 +82,68 @@ function clearSignature() {
     hasSignature = false;
 }
 
+// Initialize Google Maps Autocomplete
+let pickupAutocomplete, dropoffAutocomplete;
+
+function initAutocomplete() {
+    // Check if Google Maps is loaded
+    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+        console.log('Google Maps not loaded. Address autocomplete disabled. GPS and manual entry still work!');
+        return;
+    }
+
+    try {
+        const options = {
+            componentRestrictions: { country: 'za' }, // Restrict to South Africa
+            fields: ['formatted_address', 'geometry', 'name']
+        };
+
+        pickupAutocomplete = new google.maps.places.Autocomplete(
+            document.getElementById('pickupLocation'),
+            options
+        );
+
+        dropoffAutocomplete = new google.maps.places.Autocomplete(
+            document.getElementById('dropoffLocation'),
+            options
+        );
+
+        // Listen for place selection
+        pickupAutocomplete.addListener('place_changed', function() {
+            const place = pickupAutocomplete.getPlace();
+            if (place.geometry) {
+                pickupCoords = {
+                    lat: place.geometry.location.lat(),
+                    lon: place.geometry.location.lng()
+                };
+                document.getElementById('pickupLocation').value = place.formatted_address || place.name;
+                calculateDistance();
+            }
+        });
+
+        dropoffAutocomplete.addListener('place_changed', function() {
+            const place = dropoffAutocomplete.getPlace();
+            if (place.geometry) {
+                dropoffCoords = {
+                    lat: place.geometry.location.lat(),
+                    lon: place.geometry.location.lng()
+                };
+                document.getElementById('dropoffLocation').value = place.formatted_address || place.name;
+                calculateDistance();
+            }
+        });
+        
+        console.log('Google Maps autocomplete initialized successfully!');
+    } catch (error) {
+        console.error('Error initializing Google Maps:', error);
+    }
+}
+
+// Initialize autocomplete when page loads
+window.addEventListener('load', () => {
+    setTimeout(initAutocomplete, 1000); // Wait for Google Maps to load
+});
+
 // Geolocation
 let pickupCoords = null;
 let dropoffCoords = null;
