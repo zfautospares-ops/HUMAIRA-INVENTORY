@@ -1,5 +1,28 @@
 # Persistent Storage Setup for Render
 
+## ⚡ Quick Start (5 Minutes)
+
+Since you've already created the PostgreSQL database on Render, here's what to do:
+
+1. **Get Database URL**
+   - Go to https://dashboard.render.com
+   - Click on your database: `mh-towing-db`
+   - Copy the "Internal Database URL" (starts with `postgresql://`)
+
+2. **Add to Web Service**
+   - Go to your web service: `mh-towing-job-cards`
+   - Click "Environment" tab
+   - Find `DATABASE_URL` variable
+   - Paste the Internal Database URL as the value
+   - Click "Save Changes"
+
+3. **Wait for Auto-Deploy**
+   - Render will automatically redeploy with the new environment variable
+   - Check logs for: "✅ Using PostgreSQL database for persistent storage"
+   - Your data will now persist forever!
+
+---
+
 ## Problem
 
 Render's free tier uses **ephemeral storage** - when your server sleeps or restarts, all data in files is lost. This means:
@@ -111,12 +134,16 @@ Upgrade to Render's paid plan to keep server always running.
 
 ## Current Status
 
-Your system is currently set up to:
+✅ **DATABASE INTEGRATION COMPLETE!**
+
+Your system is now fully configured to:
 - ✅ Use PostgreSQL if `DATABASE_URL` is set
 - ✅ Fall back to JSON files if no database
 - ✅ Show which storage method is being used in logs
+- ✅ All endpoints updated to use database module
+- ✅ Code deployed to GitHub and Render
 
-**To enable persistent storage, just follow Option 1 above!**
+**Next Step: Connect your PostgreSQL database (see Option 1 above)**
 
 ---
 
