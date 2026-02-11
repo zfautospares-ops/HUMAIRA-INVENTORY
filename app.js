@@ -245,37 +245,64 @@ function toRad(degrees) {
 window.addEventListener('load', function() {
     const workshopInput = document.getElementById('workshopLocation');
     if (workshopInput && workshopInput.value) {
+        // Try to parse as coordinates first
         const coords = parseCoordinates(workshopInput.value);
         if (coords) {
             workshopCoords = coords;
+        } else {
+            // Geocode the address
+            geocodeAndCalculate(workshopInput.value, 'workshop');
         }
     }
 });
 
-// Allow manual location entry to trigger distance calculation
-document.getElementById('workshopLocation').addEventListener('change', function() {
-    const coords = parseCoordinates(this.value);
-    if (coords) {
-        workshopCoords = coords;
-        calculateAllDistances();
-    }
+// Allow manual location entry to trigger distance calculation with geocoding
+document.getElementById('workshopLocation').addEventListener('blur', function() {
+    geocodeAndCalculate(this.value, 'workshop');
 });
 
-document.getElementById('pickupLocation').addEventListener('change', function() {
-    const coords = parseCoordinates(this.value);
-    if (coords) {
-        pickupCoords = coords;
-        calculateAllDistances();
-    }
+document.getElementById('pickupLocation').addEventListener('blur', function() {
+    geocodeAndCalculate(this.value, 'pickup');
 });
 
-document.getElementById('dropoffLocation').addEventListener('change', function() {
-    const coords = parseCoordinates(this.value);
-    if (coords) {
-        dropoffCoords = coords;
-        calculateAllDistances();
-    }
+document.getElementById('dropoffLocation').addEventListener('blur', function() {
+    geocodeAndCalculate(this.value, 'dropoff');
 });
+
+// Geocode address and calculate distances
+function geocodeAndCalculate(address, type) {
+    if (!address || address.trim() === '') return;
+    
+    // Check if it's already coordinates
+    const coords = parseCoordinates(address);
+    if (coords) {
+        if (type === 'workshop') workshopCoords = coords;
+        else if (type === 'pickup') pickupCoords = coords;
+        else if (type === 'dropoff') dropoffCoords = coords;
+        calculateAllDistances();
+        return;
+    }
+    
+    // Use Google Maps Geocoding API if available
+    if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder) {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: address, componentRestrictions: { country: 'za' } }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                const location = results[0].geometry.location;
+                const coords = { lat: location.lat(), lon: location.lng() };
+                
+                if (type === 'workshop') workshopCoords = coords;
+                else if (type === 'pickup') pickupCoords = coords;
+                else if (type === 'dropoff') dropoffCoords = coords;
+                
+                calculateAllDistances();
+                console.log(`Geocoded ${type}: ${address} to`, coords);
+            } else {
+                console.log(`Geocoding failed for ${type}: ${status}`);
+            }
+        });
+    }
+}
 
 // Parse coordinates from string format "lat, lon"
 function parseCoordinates(str) {
