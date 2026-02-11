@@ -143,6 +143,11 @@ window.initAutocomplete = initAutocomplete;
 let workshopCoords = null;
 let pickupCoords = null;
 let dropoffCoords = null;
+let additionalStopsCoords = [];
+let stopCounter = 0;
+let map = null;
+let directionsService = null;
+let directionsRenderer = null;
 
 function getLocation(type) {
     if (!navigator.geolocation) {
@@ -166,9 +171,13 @@ function getLocation(type) {
             } else if (type === 'pickup') {
                 document.getElementById('pickupLocation').value = locationString;
                 pickupCoords = { lat, lon };
-            } else {
+            } else if (type === 'dropoff') {
                 document.getElementById('dropoffLocation').value = locationString;
                 dropoffCoords = { lat, lon };
+            } else if (type.startsWith('stop')) {
+                const stopNum = parseInt(type.replace('stop', ''));
+                document.getElementById(`${type}Location`).value = locationString;
+                additionalStopsCoords[stopNum - 1] = { lat, lon };
             }
             
             // Calculate distance if locations are set
@@ -187,36 +196,76 @@ function getLocation(type) {
 
 // Calculate all distances for the complete route
 function calculateAllDistances() {
+    const routeSegments = document.getElementById('routeSegments');
+    const distanceBreakdown = document.getElementById('distanceBreakdown');
+    
+    if (!routeSegments) return;
+    
+    routeSegments.innerHTML = '';
     let totalDistance = 0;
+    let hasLocations = false;
     
-    // Workshop to Pickup
-    if (workshopCoords && pickupCoords) {
-        const dist1 = calculateDistanceBetween(workshopCoords, pickupCoords);
-        document.getElementById('distanceWorkshopToPickup').textContent = dist1.toFixed(2) + ' km';
-        totalDistance += dist1;
-    } else {
-        document.getElementById('distanceWorkshopToPickup').textContent = '0 km';
-    }
+    // Build route array
+    const route = [];
+    if (workshopCoords) route.push({ name: 'Workshop', coords: workshopCoords });
+    if (pickupCoords) route.push({ name: 'Pickup', coords: pickupCoords });
     
-    // Pickup to Drop-off
-    if (pickupCoords && dropoffCoords) {
-        const dist2 = calculateDistanceBetween(pickupCoords, dropoffCoords);
-        document.getElementById('distancePickupToDropoff').textContent = dist2.toFixed(2) + ' km';
-        totalDistance += dist2;
-    } else {
-        document.getElementById('distancePickupToDropoff').textContent = '0 km';
-    }
+    // Add additional stops
+    additionalStopsCoords.forEach((coords, index) => {
+        if (coords) {
+            route.push({ name: `Stop ${index + 1}`, coords: coords });
+        }
+    });
     
-    // Drop-off to Workshop
-    if (dropoffCoords && workshopCoords) {
-        const dist3 = calculateDistanceBetween(dropoffCoords, workshopCoords);
-        document.getElementById('distanceDropoffToWorkshop').textContent = dist3.toFixed(2) + ' km';
-        totalDistance += dist3;
-    } else {
-        document.getElementById('distanceDropoffToWorkshop').textContent = '0 km';
+    if (dropoffCoords) route.push({ name: 'Drop-off', coords: dropoffCoords });
+    if (workshopCoords && route.length > 1) route.push({ name: 'Workshop', coords: workshopCoords });
+    
+    // Calculate distances between consecutive points
+    for (let i = 0; i < route.length - 1; i++) {
+        const from = route[i];
+        const to = route[i + 1];
+        const distance = calculateDistanceBetween(from.coords, to.coords);
+        totalDistance += distance;
+        hasLocations = true;
+        
+        const segmentDiv = document.createElement('div');
+        segmentDiv.className = 'distance-item';
+        segmentDiv.innerHTML = `
+            <span class="distance-label">${i === 0 ? '🏠' : '🚗'} ${from.name} → ${to.name}:</span>
+            <span class="distance-value">${distance.toFixed(2)} km</span>
+        `;
+        routeSegments.appendChild(segmentDiv);
     }
     
     // Update total
+    document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
+    document.getElementById('mileage').value = totalDistance.toFixed(2);
+    
+    // Show/hide distance breakdown and map button
+    if (hasLocations) {
+        distanceBreakdown.style.display = 'block';
+        document.getElementById('showMapBtn').style.display = 'inline-block';
+    } else {
+        distanceBreakdown.style.display = 'none';
+        document.getElementById('showMapBtn').style.display = 'none';
+    }
+}
+
+// Update route display with Google Maps route data
+function updateRouteDisplay(segments, totalDistance) {
+    const routeSegments = document.getElementById('routeSegments');
+    routeSegments.innerHTML = '';
+    
+    segments.forEach((segment, index) => {
+        const segmentDiv = document.createElement('div');
+        segmentDiv.className = 'distance-item';
+        segmentDiv.innerHTML = `
+            <span class="distance-label">${index === 0 ? '🏠' : '🚗'} Leg ${index + 1}:</span>
+            <span class="distance-value">${segment.distance} km</span>
+        `;
+        routeSegments.appendChild(segmentDiv);
+    });
+    
     document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
     document.getElementById('mileage').value = totalDistance.toFixed(2);
 }
@@ -256,6 +305,151 @@ window.addEventListener('load', function() {
     }
 });
 
+// Add additional stop
+function addStop() {
+    stopCounter++;
+    const stopDiv = document.createElement('div');
+    stopDiv.className = 'form-group additional-stop';
+    stopDiv.id = `stop-${stopCounter}`;
+    stopDiv.innerHTML = `
+        <label for="stop${stopCounter}Location">Stop ${stopCounter} Location</label>
+        <input type="text" id="stop${stopCounter}Location" placeholder="Start typing address..." class="stop-input">
+        <button type="button" class="btn-secondary" onclick="getLocation('stop${stopCounter}')">📍 Use Current GPS</button>
+        <button type="button" class="btn-secondary" onclick="removeStop(${stopCounter})" style="background: #ff5252; color: white; border-color: #ff5252;">
+            ❌ Remove
+        </button>
+    `;
+    document.getElementById('additionalStops').appendChild(stopDiv);
+    
+    // Add autocomplete to new stop
+    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+        const input = document.getElementById(`stop${stopCounter}Location`);
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            componentRestrictions: { country: 'za' },
+            fields: ['formatted_address', 'geometry', 'name']
+        });
+        
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (place.geometry) {
+                const coords = {
+                    lat: place.geometry.location.lat(),
+                    lon: place.geometry.location.lng()
+                };
+                additionalStopsCoords[stopCounter - 1] = coords;
+                input.value = place.formatted_address || place.name;
+                calculateAllDistances();
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            geocodeAndCalculate(this.value, `stop${stopCounter}`);
+        });
+    }
+}
+
+// Remove stop
+function removeStop(stopNum) {
+    const stopDiv = document.getElementById(`stop-${stopNum}`);
+    if (stopDiv) {
+        stopDiv.remove();
+        delete additionalStopsCoords[stopNum - 1];
+        calculateAllDistances();
+    }
+}
+
+// Show route map
+function showRouteMap() {
+    if (typeof google === 'undefined' || !google.maps) {
+        alert('Google Maps is not loaded. Cannot display map.');
+        return;
+    }
+    
+    const mapDiv = document.getElementById('routeMap');
+    mapDiv.style.display = 'block';
+    
+    // Initialize map if not already done
+    if (!map) {
+        map = new google.maps.Map(mapDiv, {
+            zoom: 10,
+            center: workshopCoords || { lat: -29.5733, lng: 31.0847 } // Tongaat, KZN
+        });
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+    }
+    
+    // Build waypoints array
+    const waypoints = [];
+    
+    if (pickupCoords) {
+        waypoints.push({
+            location: new google.maps.LatLng(pickupCoords.lat, pickupCoords.lon),
+            stopover: true
+        });
+    }
+    
+    // Add additional stops
+    additionalStopsCoords.forEach((coords, index) => {
+        if (coords) {
+            waypoints.push({
+                location: new google.maps.LatLng(coords.lat, coords.lon),
+                stopover: true
+            });
+        }
+    });
+    
+    if (dropoffCoords) {
+        waypoints.push({
+            location: new google.maps.LatLng(dropoffCoords.lat, dropoffCoords.lon),
+            stopover: true
+        });
+    }
+    
+    if (waypoints.length === 0) {
+        alert('Please enter at least pickup and drop-off locations');
+        return;
+    }
+    
+    // Calculate and display route
+    const origin = workshopCoords ? new google.maps.LatLng(workshopCoords.lat, workshopCoords.lon) : waypoints[0].location;
+    const destination = workshopCoords ? new google.maps.LatLng(workshopCoords.lat, workshopCoords.lon) : waypoints[waypoints.length - 1].location;
+    
+    const request = {
+        origin: origin,
+        destination: destination,
+        waypoints: waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+        region: 'ZA'
+    };
+    
+    directionsService.route(request, function(result, status) {
+        if (status === 'OK') {
+            directionsRenderer.setDirections(result);
+            
+            // Update distances from actual route
+            const route = result.routes[0];
+            let totalDistance = 0;
+            const segments = [];
+            
+            route.legs.forEach((leg, index) => {
+                const distanceKm = (leg.distance.value / 1000).toFixed(2);
+                totalDistance += parseFloat(distanceKm);
+                segments.push({
+                    from: leg.start_address,
+                    to: leg.end_address,
+                    distance: distanceKm
+                });
+            });
+            
+            // Update UI with route distances
+            updateRouteDisplay(segments, totalDistance);
+        } else {
+            alert('Could not calculate route: ' + status);
+        }
+    });
+}
+
 // Allow manual location entry to trigger distance calculation with geocoding
 document.getElementById('workshopLocation').addEventListener('blur', function() {
     geocodeAndCalculate(this.value, 'workshop');
@@ -279,6 +473,10 @@ function geocodeAndCalculate(address, type) {
         if (type === 'workshop') workshopCoords = coords;
         else if (type === 'pickup') pickupCoords = coords;
         else if (type === 'dropoff') dropoffCoords = coords;
+        else if (type.startsWith('stop')) {
+            const stopNum = parseInt(type.replace('stop', ''));
+            additionalStopsCoords[stopNum - 1] = coords;
+        }
         calculateAllDistances();
         return;
     }
@@ -294,6 +492,10 @@ function geocodeAndCalculate(address, type) {
                 if (type === 'workshop') workshopCoords = coords;
                 else if (type === 'pickup') pickupCoords = coords;
                 else if (type === 'dropoff') dropoffCoords = coords;
+                else if (type.startsWith('stop')) {
+                    const stopNum = parseInt(type.replace('stop', ''));
+                    additionalStopsCoords[stopNum - 1] = coords;
+                }
                 
                 calculateAllDistances();
                 console.log(`Geocoded ${type}: ${address} to`, coords);
