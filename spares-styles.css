@@ -796,3 +796,266 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Enhanced Mobile Optimizations */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 0;
+    }
+    
+    .header {
+        padding: 15px;
+    }
+    
+    .company-branding h1 {
+        font-size: 20px;
+    }
+    
+    .company-contact {
+        font-size: 11px;
+    }
+    
+    .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .header-actions button,
+    .header-actions a {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 120px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .page-title {
+        padding: 15px;
+    }
+    
+    .page-title h2 {
+        font-size: 22px;
+    }
+    
+    .page-title p {
+        font-size: 13px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .filters {
+        padding: 15px;
+        flex-direction: column;
+    }
+    
+    .filters input,
+    .filters select {
+        min-width: 100%;
+        font-size: 16px;
+    }
+    
+    .inventory-container {
+        padding: 15px;
+    }
+    
+    .inventory-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .item-card {
+        padding: 15px;
+    }
+    
+    .item-name {
+        font-size: 16px;
+    }
+    
+    .item-price {
+        font-size: 20px;
+    }
+    
+    .item-actions {
+        flex-wrap: wrap;
+    }
+    
+    .item-actions button {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 80px;
+    }
+    
+    /* Modal optimizations */
+    .modal-content {
+        margin: 20px auto;
+        padding: 25px;
+        max-width: 95%;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 16px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+    
+    /* Sales modal */
+    .sales-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .summary-card {
+        padding: 15px;
+    }
+    
+    .summary-value {
+        font-size: 20px;
+    }
+    
+    .sales-filters {
+        flex-direction: column;
+    }
+    
+    .sales-filters input {
+        min-width: 100%;
+    }
+    
+    .sale-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .sale-amount {
+        font-size: 18px;
+    }
+    
+    /* Sell modal */
+    .sell-info {
+        padding: 12px;
+    }
+    
+    .sale-total {
+        padding: 15px;
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+    
+    .total-value {
+        font-size: 24px;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+    }
+    
+    .header {
+        padding: 12px;
+    }
+    
+    .company-branding h1 {
+        font-size: 18px;
+    }
+    
+    .header-actions button,
+    .header-actions a {
+        flex: 1 1 100%;
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+    }
+    
+    .item-actions button {
+        flex: 1 1 100%;
+        margin-bottom: 4px;
+    }
+    
+    .sales-summary {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    button, a, input, select {
+        min-height: 44px;
+    }
+    
+    .item-card {
+        cursor: default;
+    }
+    
+    .item-actions button {
+        min-height: 48px;
+        padding: 12px;
+    }
+    
+    .btn-view,
+    .btn-edit,
+    .btn-sell,
+    .btn-delete {
+        font-size: 16px;
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    input, select, textarea {
+        font-size: 16px;
+    }
+    
+    button {
+        -webkit-tap-highlight-color: rgba(102, 126, 234, 0.1);
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .inventory-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

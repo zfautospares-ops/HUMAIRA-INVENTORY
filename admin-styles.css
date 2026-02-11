@@ -563,3 +563,225 @@ body {
     padding: 3px 8px;
     border-radius: 10px;
 }
+
+/* Enhanced Mobile Optimizations */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .dashboard {
+        padding: 0;
+    }
+    
+    .dashboard-header {
+        padding: 15px;
+    }
+    
+    .company-branding h1 {
+        font-size: 20px;
+    }
+    
+    .company-contact {
+        font-size: 11px;
+    }
+    
+    .dashboard-title h2 {
+        font-size: 18px;
+    }
+    
+    .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+    
+    .header-actions button,
+    .header-actions a {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 100px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-value {
+        font-size: 36px;
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .filters {
+        padding: 15px;
+    }
+    
+    .filters input,
+    .filters select {
+        font-size: 16px;
+    }
+    
+    .job-cards-container {
+        padding: 15px;
+    }
+    
+    .job-card-item {
+        padding: 15px;
+    }
+    
+    .job-id {
+        font-size: 14px;
+    }
+    
+    .job-date {
+        font-size: 12px;
+    }
+    
+    .job-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .job-actions button {
+        width: 100%;
+    }
+    
+    /* Modal optimizations */
+    .modal-content {
+        margin: 20px auto;
+        padding: 25px;
+        max-width: 95%;
+        max-height: 85vh;
+    }
+    
+    .modal-content h2 {
+        font-size: 20px;
+    }
+    
+    .modal-section h3 {
+        font-size: 16px;
+    }
+    
+    /* Backup modal */
+    .backup-actions {
+        padding: 15px 0;
+    }
+    
+    .btn-create-backup {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+    
+    .backup-item {
+        padding: 12px;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .backup-filename {
+        font-size: 13px;
+        word-break: break-all;
+    }
+    
+    .backup-meta {
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11px;
+    }
+    
+    .backup-records {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .backup-records span {
+        font-size: 10px;
+        padding: 2px 6px;
+    }
+    
+    .backup-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+    }
+    
+    .dashboard-header {
+        padding: 12px;
+    }
+    
+    .company-branding h1 {
+        font-size: 18px;
+    }
+    
+    .header-actions button,
+    .header-actions a {
+        flex: 1 1 100%;
+        font-size: 12px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-value {
+        font-size: 32px;
+    }
+    
+    .job-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    button, a, input, select {
+        min-height: 44px;
+    }
+    
+    .job-card-item {
+        cursor: default;
+    }
+    
+    .btn-view,
+    .btn-delete,
+    .btn-refresh,
+    .btn-new,
+    .btn-backup,
+    .btn-spares {
+        min-height: 48px;
+        font-size: 14px;
+    }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+    input, select {
+        font-size: 16px;
+    }
+    
+    button {
+        -webkit-tap-highlight-color: rgba(102, 126, 234, 0.1);
+    }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

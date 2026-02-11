@@ -840,11 +840,16 @@ function generateQuotation() {
 
 // Share quote in different formats
 function shareQuote(format) {
+    console.log('Share quote called with format:', format);
+    
     const quote = generateQuotation();
     if (!quote) return;
     
     // Close the menu
-    document.getElementById('shareMenu').classList.remove('show');
+    const menu = document.getElementById('shareMenu');
+    if (menu) {
+        menu.classList.remove('show');
+    }
     
     const message = `━━━━━━━━━━━━━━━━━━━━━━
 MH TOWING - QUOTATION
@@ -870,95 +875,194 @@ Contact us:
 This quote is valid for 7 days.
 Terms and conditions apply.`;
 
-    const shortMessage = `MH TOWING QUOTE\n\nFrom: ${quote.from}\nTo: ${quote.to}\nDistance: ${quote.distance.toFixed(2)} km\nPrice: ${quote.total}\n\nContact: 061 453 2160`;
+    const shortMessage = `MH TOWING QUOTE
+
+From: ${quote.from}
+To: ${quote.to}
+Distance: ${quote.distance.toFixed(2)} km
+Price: ${quote.total}
+
+Contact: 061 453 2160`;
     
-    switch(format) {
-        case 'whatsapp':
-            // WhatsApp format
-            const whatsappText = encodeURIComponent(message);
-            const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
-            window.open(whatsappUrl, '_blank');
-            break;
-            
-        case 'sms':
-            // SMS format (shorter for SMS limits)
-            const smsText = encodeURIComponent(shortMessage);
-            window.location.href = `sms:?body=${smsText}`;
-            break;
-            
-        case 'email':
-            // Email format
-            const subject = encodeURIComponent('MH Towing - Quotation');
-            const body = encodeURIComponent(message);
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
-            break;
-            
-        case 'copy':
-            // Copy to clipboard
-            navigator.clipboard.writeText(message).then(() => {
-                alert('✅ Quotation copied to clipboard!\n\nYou can now paste it anywhere.');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = message;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('✅ Quotation copied to clipboard!');
-            });
-            break;
-            
-        case 'print':
-            // Print format
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>MH Towing - Quotation</title>
-                    <style>
-                        body {
-                            font-family: 'Courier New', monospace;
-                            padding: 40px;
-                            max-width: 600px;
-                            margin: 0 auto;
-                        }
-                        pre {
-                            white-space: pre-wrap;
-                            font-size: 14px;
-                            line-height: 1.6;
-                        }
-                        @media print {
-                            body { padding: 20px; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <pre>${message}</pre>
-                    <script>
-                        window.onload = function() {
-                            window.print();
-                        }
-                    </script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            break;
-            
-        default:
-            // Fallback to native share if available
-            if (navigator.share) {
-                navigator.share({
-                    title: 'MH Towing Quotation',
-                    text: message
-                }).catch(err => console.log('Error sharing:', err));
-            } else {
-                // Copy to clipboard as fallback
-                shareQuote('copy');
-            }
+    console.log('Sharing via:', format);
+    
+    try {
+        switch(format) {
+            case 'whatsapp':
+                // WhatsApp format - detect mobile vs desktop
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const whatsappText = encodeURIComponent(message);
+                
+                if (isMobile) {
+                    // Mobile: Use whatsapp:// protocol
+                    window.location.href = `whatsapp://send?text=${whatsappText}`;
+                    
+                    // Fallback to web WhatsApp after 1 second if app doesn't open
+                    setTimeout(() => {
+                        window.open(`https://wa.me/?text=${whatsappText}`, '_blank');
+                    }, 1000);
+                } else {
+                    // Desktop: Use web WhatsApp
+                    window.open(`https://web.whatsapp.com/send?text=${whatsappText}`, '_blank');
+                }
+                break;
+                
+            case 'sms':
+                // SMS format (shorter for SMS limits)
+                const smsText = encodeURIComponent(shortMessage);
+                const isMobileSMS = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                
+                if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    // iOS
+                    window.location.href = `sms:&body=${smsText}`;
+                } else if (/Android/i.test(navigator.userAgent)) {
+                    // Android
+                    window.location.href = `sms:?body=${smsText}`;
+                } else {
+                    // Desktop fallback - copy to clipboard
+                    copyToClipboard(shortMessage, 'SMS text copied! Open your messaging app to paste and send.');
+                }
+                break;
+                
+            case 'email':
+                // Email format
+                const subject = encodeURIComponent('MH Towing - Quotation');
+                const body = encodeURIComponent(message);
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                
+                // Show confirmation after a delay
+                setTimeout(() => {
+                    alert('📧 Email client should open. If not, the quote has been copied to your clipboard.');
+                    copyToClipboard(message);
+                }, 500);
+                break;
+                
+            case 'copy':
+                // Copy to clipboard
+                copyToClipboard(message, '✅ Quotation copied to clipboard!\n\nYou can now paste it into WhatsApp, SMS, email, or any other app.');
+                break;
+                
+            case 'print':
+                // Print format
+                printQuote(message);
+                break;
+                
+            default:
+                // Fallback to copy
+                copyToClipboard(message, '✅ Quotation copied to clipboard!');
+        }
+    } catch (error) {
+        console.error('Error sharing quote:', error);
+        // Fallback to copy on any error
+        copyToClipboard(message, '✅ Quotation copied to clipboard!\n\nYou can paste it into any app.');
     }
+}
+
+// Helper function to copy to clipboard with fallback
+function copyToClipboard(text, successMessage) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        // Modern clipboard API
+        navigator.clipboard.writeText(text).then(() => {
+            alert(successMessage || '✅ Copied to clipboard!');
+        }).catch(() => {
+            // Fallback for clipboard API failure
+            fallbackCopyToClipboard(text, successMessage);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(text, successMessage);
+    }
+}
+
+// Fallback copy method for older browsers
+function fallbackCopyToClipboard(text, successMessage) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.width = '2em';
+    textarea.style.height = '2em';
+    textarea.style.padding = '0';
+    textarea.style.border = 'none';
+    textarea.style.outline = 'none';
+    textarea.style.boxShadow = 'none';
+    textarea.style.background = 'transparent';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            alert(successMessage || '✅ Copied to clipboard!');
+        } else {
+            alert('❌ Copy failed. Please try again.');
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        alert('❌ Copy failed. Please try selecting and copying manually.');
+    }
+    
+    document.body.removeChild(textarea);
+}
+
+// Helper function to print quote
+function printQuote(message) {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+        alert('❌ Pop-up blocked. Please allow pop-ups and try again.');
+        return;
+    }
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>MH Towing - Quotation</title>
+            <style>
+                body {
+                    font-family: 'Courier New', monospace;
+                    padding: 40px;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    line-height: 1.6;
+                }
+                pre {
+                    white-space: pre-wrap;
+                    font-size: 14px;
+                    line-height: 1.8;
+                }
+                @media print {
+                    body { 
+                        padding: 20px; 
+                    }
+                    @page {
+                        margin: 2cm;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <pre>${message}</pre>
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 250);
+                }
+                
+                // Close window after printing or canceling
+                window.onafterprint = function() {
+                    setTimeout(function() {
+                        window.close();
+                    }, 100);
+                }
+            </script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 // Reset calculator
