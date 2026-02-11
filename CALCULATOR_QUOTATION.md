@@ -33,17 +33,21 @@ The Distance & Pricing Calculator now generates professional quotations that can
 4. Calculate distance
 5. Set customer price
 
-### Step 2: Share the Quote
-1. Click the **📤 Share Quote** button
-2. Choose sharing method:
-   - **Mobile**: Native share menu (WhatsApp, SMS, Email, etc.)
-   - **Desktop**: Automatically copies to clipboard
+### Step 2: Choose Sharing Format ⭐ NEW
+Click the **📤 Share Quote ▼** button to see options:
+
+1. **📱 WhatsApp** - Opens WhatsApp with formatted quote
+2. **💬 SMS** - Opens SMS app with quote (shorter format)
+3. **📧 Email** - Opens email client with quote
+4. **📋 Copy Text** - Copies to clipboard for pasting anywhere
+5. **🖨️ Print** - Opens print dialog for paper quotes
 
 ### Step 3: Send to Customer
-- Paste into WhatsApp chat
-- Send via SMS
-- Include in email
-- Print for in-person quotes
+- Each format is optimized for its platform
+- WhatsApp & Email: Full professional format
+- SMS: Shorter format (character limits)
+- Copy: Paste into any app
+- Print: Professional paper quote
 
 ---
 
@@ -190,29 +194,44 @@ Terms and conditions apply.
 
 ## 📱 Platform-Specific Tips
 
-### WhatsApp
+### WhatsApp ⭐ UPDATED
+- Click WhatsApp option for direct sharing
 - Quote formats perfectly in chat
 - Easy for customers to save
 - Can include in groups
 - Quick back-and-forth communication
+- Full professional format
 
-### SMS
+### SMS ⭐ UPDATED
+- Click SMS option to open messaging app
+- Shorter format optimized for SMS
 - Works on all phones
 - No app required
 - Reliable delivery
 - Good for older customers
 
-### Email
-- Professional format
+### Email ⭐ UPDATED
+- Click Email option to open mail client
+- Full professional format
 - Easy to forward
 - Can attach additional info
 - Good for corporate clients
+- Professional appearance
 
-### In-Person
-- Can show on phone screen
-- Print if needed
-- Discuss details face-to-face
-- Immediate feedback
+### Copy to Clipboard ⭐ NEW
+- Universal option for any platform
+- Paste into any app
+- Works everywhere
+- Full professional format
+- Most flexible option
+
+### Print ⭐ NEW
+- Professional paper quotes
+- Opens print dialog
+- Clean formatting
+- Good for in-person quotes
+- Can file for records
+- No internet needed
 
 ---
 
@@ -221,16 +240,23 @@ Terms and conditions apply.
 ### Sharing Methods
 
 **Mobile Devices:**
-- Uses native share API
-- Integrates with installed apps
-- One-tap sharing
-- Platform-optimized
+- WhatsApp: Direct integration ⭐ NEW
+- SMS: Opens messaging app ⭐ NEW
+- Email: Opens mail client ⭐ NEW
+- Copy: Universal clipboard ⭐ NEW
+- Print: Mobile print dialog ⭐ NEW
 
 **Desktop/Laptop:**
-- Copies to clipboard
-- Confirmation message
-- Paste anywhere
-- Universal compatibility
+- WhatsApp Web: Opens in browser ⭐ NEW
+- Email: Opens default mail client ⭐ NEW
+- Copy: Copies to clipboard ⭐ NEW
+- Print: Opens print dialog ⭐ NEW
+
+**All Platforms:**
+- Dropdown menu with 5 options ⭐ NEW
+- One-click sharing
+- Format-optimized output
+- Professional appearance
 
 ### Data Privacy
 - No customer data stored
@@ -366,8 +392,13 @@ Terms and conditions apply.
 
 ### To Share a Quote:
 1. Calculate trip
-2. Click **📤 Share Quote**
-3. Choose sharing method
+2. Click **📤 Share Quote ▼**
+3. Choose format:
+   - 📱 WhatsApp
+   - 💬 SMS
+   - 📧 Email
+   - 📋 Copy
+   - 🖨️ Print
 4. Send to customer
 
 ### Quote Includes:
