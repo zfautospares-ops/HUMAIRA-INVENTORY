@@ -237,59 +237,37 @@ function calculateAllDistances() {
         return;
     }
     
-    // Always use Haversine as primary method (reliable, no API issues)
-    // Google Maps Distance Matrix is optional enhancement
-    calculateWithHaversine(route);
-    
-    // Try to enhance with Google Maps if available (but don't rely on it)
+    // ALWAYS use Google Maps Distance Matrix for accurate road distances
     if (typeof google !== 'undefined' && google.maps && google.maps.DistanceMatrixService) {
-        tryEnhanceWithGoogleMaps(route);
-    }
-}
-
-// Try to enhance distances with Google Maps (optional, silent fail)
-function tryEnhanceWithGoogleMaps(route) {
-    try {
-        const service = new google.maps.DistanceMatrixService();
-        
-        // Only try first segment as a test
-        if (route.length >= 2) {
-            const origin = new google.maps.LatLng(route[0].coords.lat, route[0].coords.lon);
-            const destination = new google.maps.LatLng(route[1].coords.lat, route[1].coords.lon);
-            
-            service.getDistanceMatrix({
-                origins: [origin],
-                destinations: [destination],
-                travelMode: google.maps.TravelMode.DRIVING,
-                unitSystem: google.maps.UnitSystem.METRIC
-            }, function(response, status) {
-                if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
-                    // Google Maps worked! Use it for all segments
-                    calculateWithGoogleMaps(route);
-                }
-                // If it fails, silently continue with Haversine (already displayed)
-            });
-        }
-    } catch (error) {
-        // Silent fail - Haversine distances already shown
-        console.log('Google Maps Distance Matrix not available, using direct distance calculation');
+        calculateWithGoogleMaps(route);
+    } else {
+        // Show error - Google Maps required
+        routeSegments.innerHTML = `
+            <div style="padding: 15px; background: #ffebee; border-radius: 8px; color: #c62828;">
+                <strong>⚠️ Google Maps Required</strong><br>
+                Distance calculation requires Google Maps API.<br>
+                <small>Please disable ad blocker for this site or enable Distance Matrix API in Google Cloud Console.</small>
+            </div>
+        `;
+        distanceBreakdown.style.display = 'block';
+        document.getElementById('showMapBtn').style.display = 'none';
     }
 }
 
 // Calculate distances using Google Maps Distance Matrix API (accurate road distances)
 function calculateWithGoogleMaps(route) {
-    // Check if Distance Matrix service is available
-    if (typeof google === 'undefined' || !google.maps || !google.maps.DistanceMatrixService) {
-        return; // Haversine already displayed
-    }
-    
     const service = new google.maps.DistanceMatrixService();
     const routeSegments = document.getElementById('routeSegments');
+    const distanceBreakdown = document.getElementById('distanceBreakdown');
+    
+    routeSegments.innerHTML = '<div class="loading" style="padding: 10px; text-align: center; color: #667eea;">📍 Calculating road distances...</div>';
+    distanceBreakdown.style.display = 'block';
     
     let totalDistance = 0;
     let segmentsCalculated = 0;
     const totalSegments = route.length - 1;
     const segments = [];
+    let apiError = false;
     
     // Calculate each segment
     for (let i = 0; i < route.length - 1; i++) {
@@ -313,43 +291,86 @@ function calculateWithGoogleMaps(route) {
                     from: from.name,
                     to: to.name,
                     distance: distanceInKm,
-                    index: i,
-                    roadDistance: true
+                    index: i
                 };
                 
                 totalDistance += distanceInKm;
             } else {
-                return; // Fail silently, keep Haversine
+                console.error(`Distance Matrix API error for segment ${i}:`, status);
+                apiError = true;
+                segments[i] = {
+                    from: from.name,
+                    to: to.name,
+                    distance: 0,
+                    index: i,
+                    error: true
+                };
             }
             
             segmentsCalculated++;
             
-            // When all segments are calculated successfully, update display
+            // When all segments are calculated, display them
             if (segmentsCalculated === totalSegments) {
-                routeSegments.innerHTML = '';
-                segments.sort((a, b) => a.index - b.index);
-                
-                segments.forEach((segment, index) => {
-                    const segmentDiv = document.createElement('div');
-                    segmentDiv.className = 'distance-item';
-                    segmentDiv.innerHTML = `
-                        <span class="distance-label">${index === 0 ? '🏠' : '🚗'} ${segment.from} → ${segment.to}:</span>
-                        <span class="distance-value">${segment.distance.toFixed(2)} km</span>
+                if (apiError) {
+                    // Show error message
+                    routeSegments.innerHTML = `
+                        <div style="padding: 15px; background: #ffebee; border-radius: 8px; color: #c62828;">
+                            <strong>⚠️ Distance Matrix API Blocked</strong><br>
+                            Unable to calculate road distances. This is usually caused by:<br>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>Ad blocker blocking Google Maps API</li>
+                                <li>Distance Matrix API not enabled in Google Cloud Console</li>
+                            </ul>
+                            <strong>To fix:</strong><br>
+                            1. Disable ad blocker for this site, OR<br>
+                            2. Enable Distance Matrix API at: <a href="https://console.cloud.google.com/apis/library/distance-matrix-backend.googleapis.com" target="_blank" style="color: #1976d2;">Google Cloud Console</a>
+                        </div>
                     `;
-                    routeSegments.appendChild(segmentDiv);
-                });
+                } else {
+                    // Display successful results
+                    routeSegments.innerHTML = '';
+                    segments.sort((a, b) => a.index - b.index);
+                    
+                    segments.forEach((segment, index) => {
+                        const segmentDiv = document.createElement('div');
+                        segmentDiv.className = 'distance-item';
+                        segmentDiv.innerHTML = `
+                            <span class="distance-label">${index === 0 ? '🏠' : '🚗'} ${segment.from} → ${segment.to}:</span>
+                            <span class="distance-value">${segment.distance.toFixed(2)} km</span>
+                        `;
+                        routeSegments.appendChild(segmentDiv);
+                    });
+                    
+                    // Update total
+                    document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
+                    document.getElementById('mileage').value = totalDistance.toFixed(2);
+                    
+                    // Add success note
+                    const noteDiv = document.createElement('div');
+                    noteDiv.style.cssText = 'padding: 8px; background: #e8f5e9; border-radius: 4px; margin-top: 10px; font-size: 12px; color: #2e7d32;';
+                    noteDiv.innerHTML = '✓ Accurate road distances via Google Maps';
+                    routeSegments.appendChild(noteDiv);
+                    
+                    document.getElementById('showMapBtn').style.display = 'inline-block';
+                }
                 
-                document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
-                document.getElementById('mileage').value = totalDistance.toFixed(2);
-                
-                // Add note that these are road distances
-                const noteDiv = document.createElement('div');
-                noteDiv.style.cssText = 'padding: 8px; background: #e8f5e9; border-radius: 4px; margin-top: 10px; font-size: 12px; color: #2e7d32;';
-                noteDiv.innerHTML = '✓ Road distances via Google Maps';
-                routeSegments.appendChild(noteDiv);
+                distanceBreakdown.style.display = 'block';
             }
         });
     }
+    
+    // Timeout - show error if taking too long
+    setTimeout(() => {
+        if (segmentsCalculated < totalSegments) {
+            routeSegments.innerHTML = `
+                <div style="padding: 15px; background: #fff3e0; border-radius: 8px; color: #f57c00;">
+                    <strong>⏱️ Request Timeout</strong><br>
+                    Distance calculation is taking too long. Please check your internet connection and try again.
+                </div>
+            `;
+            distanceBreakdown.style.display = 'block';
+        }
+    }, 10000);
 }
 
 
