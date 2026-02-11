@@ -1,6 +1,6 @@
 let allJobCards = [];
 
-// Pricing Configuration
+// Pricing Configuration - Updated with auto-calculation
 const PRICING_CONFIG = {
     ratePerKm: 15, // R15 per km
     baseFees: {
