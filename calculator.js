@@ -27,8 +27,10 @@ function initMap() {
         suppressMarkers: false
     });
 
-    // Initialize autocomplete
-    initAutocomplete();
+    // Initialize autocomplete after a short delay
+    setTimeout(() => {
+        initAutocomplete();
+    }, 500);
 }
 
 window.initMap = initMap;
@@ -36,19 +38,30 @@ window.initMap = initMap;
 // Initialize Google Maps Autocomplete
 function initAutocomplete() {
     if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-        console.log('Google Maps not loaded. GPS and manual entry still work!');
+        console.log('Google Maps Places not loaded. GPS and manual entry still work!');
         return;
     }
 
     try {
         const options = {
             componentRestrictions: { country: 'za' },
-            fields: ['formatted_address', 'geometry', 'name']
+            fields: ['formatted_address', 'geometry', 'name', 'place_id']
         };
 
         const fromInput = document.getElementById('fromLocation');
         const toInput = document.getElementById('toLocation');
         const workshopInput = document.getElementById('workshopLocation');
+
+        // Clear any existing autocomplete
+        if (fromAutocomplete) {
+            google.maps.event.clearInstanceListeners(fromInput);
+        }
+        if (toAutocomplete) {
+            google.maps.event.clearInstanceListeners(toInput);
+        }
+        if (workshopAutocomplete) {
+            google.maps.event.clearInstanceListeners(workshopInput);
+        }
 
         fromAutocomplete = new google.maps.places.Autocomplete(fromInput, options);
         toAutocomplete = new google.maps.places.Autocomplete(toInput, options);
@@ -56,41 +69,47 @@ function initAutocomplete() {
 
         fromAutocomplete.addListener('place_changed', function() {
             const place = fromAutocomplete.getPlace();
+            console.log('From place selected:', place);
             if (place.geometry) {
                 fromCoords = {
                     lat: place.geometry.location.lat(),
                     lon: place.geometry.location.lng()
                 };
                 fromInput.value = place.formatted_address || place.name;
+                console.log('From coords:', fromCoords);
                 calculateRoutes();
             }
         });
 
         toAutocomplete.addListener('place_changed', function() {
             const place = toAutocomplete.getPlace();
+            console.log('To place selected:', place);
             if (place.geometry) {
                 toCoords = {
                     lat: place.geometry.location.lat(),
                     lon: place.geometry.location.lng()
                 };
                 toInput.value = place.formatted_address || place.name;
+                console.log('To coords:', toCoords);
                 calculateRoutes();
             }
         });
 
         workshopAutocomplete.addListener('place_changed', function() {
             const place = workshopAutocomplete.getPlace();
+            console.log('Workshop place selected:', place);
             if (place.geometry) {
                 workshopCoords = {
                     lat: place.geometry.location.lat(),
                     lon: place.geometry.location.lng()
                 };
                 workshopInput.value = place.formatted_address || place.name;
+                console.log('Workshop coords:', workshopCoords);
                 calculateRoutes();
             }
         });
 
-        console.log('Google Maps initialized!');
+        console.log('Google Maps autocomplete initialized successfully!');
     } catch (error) {
         console.error('Error initializing Google Maps:', error);
     }
@@ -406,22 +425,17 @@ function updateManualDistance() {
 
 // Calculate distance using Haversine formula (fallback)
 function calculateDistance() {
-    if (!fromCoords || !toCoords) {
-        return 0;
+    if (isWorkshopRoute && workshopCoords && fromCoords && toCoords) {
+        // Calculate total workshop route distance
+        const dist1 = calculateDistanceBetween(workshopCoords, fromCoords);
+        const dist2 = calculateDistanceBetween(fromCoords, toCoords);
+        const dist3 = calculateDistanceBetween(toCoords, workshopCoords);
+        return dist1 + dist2 + dist3;
+    } else if (fromCoords && toCoords) {
+        // Simple route
+        return calculateDistanceBetween(fromCoords, toCoords);
     }
-    
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = toRad(toCoords.lat - fromCoords.lat);
-    const dLon = toRad(toCoords.lon - fromCoords.lon);
-    
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(toRad(fromCoords.lat)) * Math.cos(toRad(toCoords.lat)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    
-    return distance;
+    return 0;
 }
 
 function toRad(degrees) {
@@ -622,6 +636,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const coords = parseCoordinates(this.value);
         if (coords) {
             toCoords = coords;
+            calculateRoutes();
+        }
+    });
+    
+    document.getElementById('workshopLocation').addEventListener('change', function() {
+        const coords = parseCoordinates(this.value);
+        if (coords) {
+            workshopCoords = coords;
             calculateRoutes();
         }
     });
