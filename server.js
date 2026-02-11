@@ -133,6 +133,26 @@ app.delete('/api/jobcards/:jobId', (req, res) => {
     }
 });
 
+// Update job card pricing
+app.put('/api/jobcards/:jobId/pricing', (req, res) => {
+    try {
+        const jobCards = readJobCards();
+        const index = jobCards.findIndex(j => j.jobId === req.params.jobId);
+        
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'Job card not found' });
+        }
+        
+        jobCards[index].pricing = req.body;
+        writeJobCards(jobCards);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating pricing:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Stats endpoint
 app.get('/api/stats', (req, res) => {
     try {
@@ -154,10 +174,34 @@ app.get('/api/stats', (req, res) => {
             count
         }));
         
+        // Calculate revenue
+        let totalRevenue = 0;
+        let paidRevenue = 0;
+        let unpaidRevenue = 0;
+        
+        jobCards.forEach(j => {
+            if (j.pricing && j.pricing.finalPrice) {
+                totalRevenue += j.pricing.finalPrice;
+                if (j.pricing.paymentStatus === 'paid') {
+                    paidRevenue += j.pricing.finalPrice;
+                } else if (j.pricing.paymentStatus === 'partial') {
+                    paidRevenue += j.pricing.amountPaid || 0;
+                    unpaidRevenue += (j.pricing.finalPrice - (j.pricing.amountPaid || 0));
+                } else {
+                    unpaidRevenue += j.pricing.finalPrice;
+                }
+            }
+        });
+        
         res.json({
             totalJobs: jobCards.length,
             todayJobs: todayJobs,
-            byServiceType: byServiceArray
+            byServiceType: byServiceArray,
+            revenue: {
+                total: totalRevenue,
+                paid: paidRevenue,
+                unpaid: unpaidRevenue
+            }
         });
     } catch (error) {
         console.error('Error fetching stats:', error);

@@ -796,3 +796,226 @@ body {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+
+/* Pricing Styles */
+.btn-pricing {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #4caf50;
+    color: white;
+}
+
+.btn-pricing:hover {
+    background: #45a049;
+}
+
+.price-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #4caf50;
+    color: white;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.payment-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-paid {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-unpaid {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-partial {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.stat-card.revenue .stat-value {
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-card.unpaid .stat-value {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Pricing Modal */
+.pricing-modal {
+    max-width: 600px;
+}
+
+.job-summary {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.job-summary h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.job-summary p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.price-breakdown {
+    background: #fff;
+    border: 2px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.price-breakdown h3 {
+    color: #1e3c72;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.breakdown-item.total {
+    border-bottom: none;
+    border-top: 2px solid #667eea;
+    margin-top: 10px;
+    padding-top: 15px;
+    font-size: 18px;
+    color: #667eea;
+}
+
+.pricing-form .form-group {
+    margin-bottom: 20px;
+}
+
+.pricing-form label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.pricing-form input,
+.pricing-form select,
+.pricing-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.pricing-form input:focus,
+.pricing-form select:focus,
+.pricing-form textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.pricing-form small {
+    display: block;
+    color: #999;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.btn-save-pricing {
+    flex: 1;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s;
+}
+
+.btn-save-pricing:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+}
+
+.btn-cancel {
+    padding: 14px 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: white;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+    border-color: #999;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .pricing-modal {
+        max-width: 100%;
+    }
+    
+    .breakdown-item {
+        font-size: 13px;
+    }
+    
+    .breakdown-item.total {
+        font-size: 16px;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .btn-save-pricing,
+    .btn-cancel {
+        width: 100%;
+    }
+}

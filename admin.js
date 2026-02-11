@@ -1,5 +1,24 @@
 let allJobCards = [];
 
+// Pricing Configuration
+const PRICING_CONFIG = {
+    ratePerKm: 15, // R15 per km
+    baseFees: {
+        'tow': 300,
+        'jumpstart': 150,
+        'tire-change': 200,
+        'lockout': 180,
+        'fuel-delivery': 150,
+        'winch-out': 400,
+        'flatbed': 500,
+        'accident-recovery': 600,
+        'battery-replacement': 250,
+        'other': 200
+    },
+    afterHoursPremium: 1.5, // 50% extra after hours (6pm-6am)
+    weekendPremium: 1.2 // 20% extra on weekends
+};
+
 // Load data on page load
 window.addEventListener('load', () => {
     loadStats();
@@ -15,6 +34,12 @@ function loadStats() {
             
             const towJobs = data.byServiceType.find(s => s.service_type === 'tow');
             document.getElementById('towJobs').textContent = towJobs ? towJobs.count : 0;
+            
+            // Calculate revenue stats
+            if (data.revenue) {
+                document.getElementById('totalRevenue').textContent = 'R' + data.revenue.total.toFixed(2);
+                document.getElementById('unpaidRevenue').textContent = 'R' + data.revenue.unpaid.toFixed(2);
+            }
         })
         .catch(error => {
             console.error('Error loading stats:', error);
@@ -76,9 +101,19 @@ function displayJobCards(jobCards) {
                     <div class="detail-label">Pickup Location</div>
                     <div class="detail-value">${truncate(job.service.pickupLocation, 30)}</div>
                 </div>
+                ${job.pricing ? `
+                <div class="detail-item">
+                    <div class="detail-label">Price</div>
+                    <div class="detail-value">
+                        <span class="price-badge">R${job.pricing.finalPrice.toFixed(2)}</span>
+                        <span class="payment-status status-${job.pricing.paymentStatus}">${formatPaymentStatus(job.pricing.paymentStatus)}</span>
+                    </div>
+                </div>
+                ` : ''}
             </div>
             <div class="job-actions" onclick="event.stopPropagation()">
-                <button class="btn-view" onclick="viewJobDetails('${job.jobId}')">👁️ View Details</button>
+                <button class="btn-view" onclick="viewJobDetails('${job.jobId}')">👁️ View</button>
+                <button class="btn-pricing" onclick="openPricingModal('${job.jobId}')">💰 Price</button>
                 <button class="btn-delete" onclick="deleteJob('${job.jobId}')">🗑️ Delete</button>
             </div>
         </div>
@@ -168,6 +203,50 @@ function viewJobDetails(jobId) {
                             <div class="detail-value">${job.service.totalDistance || job.service.mileage || 'N/A'} km</div>
                         </div>
                     </div>
+                    
+                    ${job.pricing ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border: 2px solid #4caf50;">
+                        <div class="detail-label" style="margin-bottom: 10px; font-weight: 700; color: #4caf50;">💰 Pricing Information</div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <div class="detail-label">Final Price</div>
+                                <div class="detail-value" style="font-size: 20px; font-weight: 700; color: #4caf50;">R${job.pricing.finalPrice.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">Payment Status</div>
+                                <div class="detail-value">
+                                    <span class="payment-status status-${job.pricing.paymentStatus}">${formatPaymentStatus(job.pricing.paymentStatus)}</span>
+                                </div>
+                            </div>
+                            ${job.pricing.paymentStatus === 'partial' ? `
+                            <div>
+                                <div class="detail-label">Amount Paid</div>
+                                <div class="detail-value">R${job.pricing.amountPaid.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">Balance Due</div>
+                                <div class="detail-value" style="color: #ff9800; font-weight: 600;">R${(job.pricing.finalPrice - job.pricing.amountPaid).toFixed(2)}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ${job.pricing.notes ? `
+                        <div style="margin-top: 10px;">
+                            <div class="detail-label">Pricing Notes</div>
+                            <div class="detail-value">${job.pricing.notes}</div>
+                        </div>
+                        ` : ''}
+                        <button onclick="openPricingModal('${job.jobId}')" class="btn-pricing" style="margin-top: 15px; width: 100%;">
+                            ✏️ Edit Pricing
+                        </button>
+                    </div>
+                    ` : `
+                    <div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; text-align: center;">
+                        <p style="color: #f57c00; margin-bottom: 10px;">⚠️ No pricing set for this job</p>
+                        <button onclick="openPricingModal('${job.jobId}')" class="btn-pricing">
+                            💰 Set Price Now
+                        </button>
+                    </div>
+                    `}
                     
                     <div class="modal-grid" style="margin-top: 15px;">
                         ${job.service.workshopLocation ? `
@@ -477,4 +556,173 @@ function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function formatPaymentStatus(status) {
+    const statusMap = {
+        'paid': '✅ Paid',
+        'unpaid': '❌ Unpaid',
+        'partial': '⏳ Partial'
+    };
+    return statusMap[status] || status;
+}
+
+
+// Calculate suggested price for a job
+function calculateSuggestedPrice(job) {
+    const distance = parseFloat(job.service.totalDistance || job.service.mileage || 0);
+    const serviceType = job.service.type;
+    const baseFee = PRICING_CONFIG.baseFees[serviceType] || PRICING_CONFIG.baseFees['other'];
+    
+    // Calculate distance cost
+    const distanceCost = distance * PRICING_CONFIG.ratePerKm;
+    
+    // Base price
+    let price = baseFee + distanceCost;
+    
+    // Check for after hours (6pm-6am)
+    const jobDate = new Date(job.created_at);
+    const hour = jobDate.getHours();
+    if (hour >= 18 || hour < 6) {
+        price *= PRICING_CONFIG.afterHoursPremium;
+    }
+    
+    // Check for weekend
+    const day = jobDate.getDay();
+    if (day === 0 || day === 6) {
+        price *= PRICING_CONFIG.weekendPremium;
+    }
+    
+    return Math.round(price * 100) / 100; // Round to 2 decimals
+}
+
+// Open pricing modal
+function openPricingModal(jobId) {
+    const job = allJobCards.find(j => j.jobId === jobId);
+    if (!job) return;
+    
+    const suggestedPrice = calculateSuggestedPrice(job);
+    const currentPrice = job.pricing?.finalPrice || suggestedPrice;
+    const paymentStatus = job.pricing?.paymentStatus || 'unpaid';
+    
+    const distance = parseFloat(job.service.totalDistance || job.service.mileage || 0);
+    const baseFee = PRICING_CONFIG.baseFees[job.service.type] || PRICING_CONFIG.baseFees['other'];
+    const distanceCost = distance * PRICING_CONFIG.ratePerKm;
+    
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2>💰 Set Job Price</h2>
+        <div class="pricing-modal">
+            <div class="job-summary">
+                <h3>Job #${job.jobId}</h3>
+                <p><strong>Customer:</strong> ${job.customer.name}</p>
+                <p><strong>Service:</strong> ${formatServiceType(job.service.type)}</p>
+                <p><strong>Distance:</strong> ${distance.toFixed(2)} km</p>
+            </div>
+            
+            <div class="price-breakdown">
+                <h3>Price Breakdown</h3>
+                <div class="breakdown-item">
+                    <span>Base Fee (${formatServiceType(job.service.type)}):</span>
+                    <span>R${baseFee.toFixed(2)}</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Distance (${distance.toFixed(2)} km × R${PRICING_CONFIG.ratePerKm}):</span>
+                    <span>R${distanceCost.toFixed(2)}</span>
+                </div>
+                <div class="breakdown-item total">
+                    <span><strong>Suggested Price:</strong></span>
+                    <span><strong>R${suggestedPrice.toFixed(2)}</strong></span>
+                </div>
+            </div>
+            
+            <div class="pricing-form">
+                <div class="form-group">
+                    <label for="finalPrice">Final Price (R)</label>
+                    <input type="number" id="finalPrice" value="${currentPrice}" step="0.01" min="0">
+                    <small>Adjust if needed (e.g., add extra charges or apply discount)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="paymentStatus">Payment Status</label>
+                    <select id="paymentStatus">
+                        <option value="unpaid" ${paymentStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
+                        <option value="partial" ${paymentStatus === 'partial' ? 'selected' : ''}>⏳ Partial Payment</option>
+                        <option value="paid" ${paymentStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="amountPaidGroup" style="display: ${paymentStatus === 'partial' ? 'block' : 'none'};">
+                    <label for="amountPaid">Amount Paid (R)</label>
+                    <input type="number" id="amountPaid" value="${job.pricing?.amountPaid || 0}" step="0.01" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pricingNotes">Notes (optional)</label>
+                    <textarea id="pricingNotes" rows="3" placeholder="e.g., Extra charge for difficult terrain, discount applied...">${job.pricing?.notes || ''}</textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button onclick="savePricing('${jobId}')" class="btn-save-pricing">💾 Save Pricing</button>
+                    <button onclick="closeModal()" class="btn-cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Show/hide amount paid field based on payment status
+    document.getElementById('paymentStatus').addEventListener('change', function() {
+        const amountPaidGroup = document.getElementById('amountPaidGroup');
+        amountPaidGroup.style.display = this.value === 'partial' ? 'block' : 'none';
+    });
+    
+    document.getElementById('jobModal').style.display = 'block';
+}
+
+// Save pricing information
+function savePricing(jobId) {
+    const finalPrice = parseFloat(document.getElementById('finalPrice').value);
+    const paymentStatus = document.getElementById('paymentStatus').value;
+    const amountPaid = paymentStatus === 'partial' ? parseFloat(document.getElementById('amountPaid').value) : 0;
+    const notes = document.getElementById('pricingNotes').value;
+    
+    if (isNaN(finalPrice) || finalPrice < 0) {
+        alert('Please enter a valid price');
+        return;
+    }
+    
+    if (paymentStatus === 'partial' && (isNaN(amountPaid) || amountPaid < 0 || amountPaid > finalPrice)) {
+        alert('Please enter a valid amount paid (between 0 and final price)');
+        return;
+    }
+    
+    const pricingData = {
+        finalPrice,
+        paymentStatus,
+        amountPaid: paymentStatus === 'partial' ? amountPaid : (paymentStatus === 'paid' ? finalPrice : 0),
+        notes,
+        updatedAt: new Date().toISOString()
+    };
+    
+    fetch(`https://mh-towing-job-cards.onrender.com/api/jobcards/${jobId}/pricing`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pricingData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Pricing saved successfully!');
+            closeModal();
+            refreshData();
+        } else {
+            alert('❌ Failed to save pricing: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error saving pricing:', error);
+        alert('❌ Error saving pricing');
+    });
 }
