@@ -584,11 +584,14 @@ function updateVehicleConsumption() {
     
     if (vehicleType !== 'custom' && consumptionRates[vehicleType]) {
         consumptionInput.value = consumptionRates[vehicleType];
-        consumptionInput.readOnly = true;
-        consumptionInput.style.background = '#f0f0f0';
+        // Keep it editable but highlight it's a preset
+        consumptionInput.readOnly = false;
+        consumptionInput.style.background = '#fff9e6';
+        consumptionInput.style.borderColor = '#ffc107';
     } else {
         consumptionInput.readOnly = false;
         consumptionInput.style.background = '#fafafa';
+        consumptionInput.style.borderColor = '#e0e0e0';
     }
     
     updatePricing();
