@@ -1,7 +1,7 @@
 # 🔧 Spares System - Quick Start Guide
 
 ## What's New?
-You now have a complete inventory management system for your second-hand truck spares!
+You now have a complete inventory management system for your second-hand truck spares with comprehensive sales tracking!
 
 ## How to Access
 
@@ -22,14 +22,31 @@ https://mh-towing-job-cards.onrender.com/spares.html
    - Condition (Excellent/Good/Fair/Poor)
    - Quantity (how many you have)
    - Selling Price (what you'll charge)
+   - Cost Price (optional, for profit tracking)
 3. Optional: Add photo, part number, vehicle compatibility
 4. Click **Save Item**
 
-### Sell an Item
+### Record a Sale ⭐ NEW
 1. Find the item
 2. Click **💰** (sell button)
-3. Enter quantity to sell
-4. Done! Stock automatically updated
+3. Enter:
+   - Quantity to sell
+   - Unit price (pre-filled, can adjust)
+   - Customer name (optional)
+   - Customer phone (optional)
+   - Notes (optional)
+4. Click **Complete Sale**
+5. Done! Stock updated, sale recorded
+
+### View Sales History ⭐ NEW
+1. Click **📊 Sales** button (blue, in header)
+2. See sales summary:
+   - Today's sales
+   - This week's sales
+   - This month's sales
+   - Total sales
+3. Browse all sales with details
+4. Filter by date or search by customer/part
 
 ### Find an Item
 - Type in search box (searches name, part number, vehicle)
@@ -48,6 +65,8 @@ https://mh-towing-job-cards.onrender.com/spares.html
 - How many items in stock
 - Low stock alerts
 - Total inventory value (R)
+- Today's sales (R) ⭐ NEW - Purple highlight
+- Total sales (R) ⭐ NEW - Purple highlight
 
 ### Each Item Card Shows:
 - Photo (if added)
@@ -58,6 +77,15 @@ https://mh-towing-job-cards.onrender.com/spares.html
 - Stock level (color-coded)
 - Selling price
 - Quick action buttons
+
+### Sales History Shows: ⭐ NEW
+- Sale date and time
+- Part sold
+- Quantity and unit price
+- Total amount
+- Profit (if cost price entered)
+- Customer information
+- Sale notes
 
 ## Stock Status Colors
 
@@ -70,8 +98,11 @@ https://mh-towing-job-cards.onrender.com/spares.html
 1. **Add Photos**: Helps identify parts and show customers
 2. **Use Part Numbers**: Makes searching easier
 3. **Track Location**: Add shelf/bay location for quick finding
-4. **Enter Cost Price**: See your profit margins
+4. **Enter Cost Price**: See your profit margins on every sale ⭐
 5. **Update Regularly**: Keep stock levels accurate
+6. **Capture Customer Info**: Build customer database for repeat business ⭐
+7. **Add Sale Notes**: Record warranty, special terms, etc. ⭐
+8. **Review Sales Daily**: Monitor revenue and identify trends ⭐
 
 ## Categories Available
 
@@ -91,7 +122,7 @@ Works perfectly on your phone! Add items, check stock, and make sales from anywh
 
 ## What You Can Track
 
-For each item:
+### For Each Item:
 - Part name and number
 - Category and vehicle compatibility
 - Condition rating
@@ -102,6 +133,26 @@ For each item:
 - Photos
 - Description/notes
 - When added and last updated
+
+### For Each Sale: ⭐ NEW
+- Part details
+- Quantity sold
+- Unit price (can differ from standard)
+- Total amount
+- Profit margin
+- Customer name and phone
+- Sale notes
+- Date and time
+
+## Business Benefits ⭐ NEW
+
+### Sales Tracking Helps You:
+- **Monitor Revenue**: See daily, weekly, monthly income
+- **Track Profits**: Know exactly how much you're making
+- **Build Customer Base**: Record customer information
+- **Identify Best Sellers**: See which parts sell most
+- **Optimize Pricing**: Adjust prices based on sales data
+- **Plan Inventory**: Stock items that sell well
 
 ## Need Help?
 
@@ -114,6 +165,9 @@ After deployment (in a few minutes):
 - Add/Edit/Delete: ✅ Available
 - Search & Filter: ✅ Available
 - Sales tracking: ✅ Available
+- Sales history: ✅ Available ⭐ NEW
+- Sales reports: ✅ Available ⭐ NEW
 - Photo upload: ✅ Available
+- Profit tracking: ✅ Available ⭐ NEW
 
-Start adding your inventory! 🎉
+Start adding your inventory and recording sales! 🎉
