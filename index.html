@@ -14,6 +14,11 @@
         // Set your Google Maps API key here
         const GOOGLE_MAPS_API_KEY = 'AIzaSyArc6Vzj2uzOK29RVvIJePIN9bS6yLPv1E';
         
+        // Global callback function for Google Maps
+        window.initAutocomplete = function() {
+            console.log('Google Maps loaded successfully');
+        };
+        
         if (GOOGLE_MAPS_API_KEY && GOOGLE_MAPS_API_KEY !== 'YOUR_API_KEY_HERE') {
             const script = document.createElement('script');
             script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;

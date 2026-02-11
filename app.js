@@ -101,33 +101,38 @@ function initAutocomplete() {
         const pickupInput = document.getElementById('pickupLocation');
         const dropoffInput = document.getElementById('dropoffLocation');
 
-        pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, options);
-        dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, options);
+        if (pickupInput) {
+            pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, options);
+            
+            // Listen for place selection
+            pickupAutocomplete.addListener('place_changed', function() {
+                const place = pickupAutocomplete.getPlace();
+                if (place.geometry) {
+                    pickupCoords = {
+                        lat: place.geometry.location.lat(),
+                        lon: place.geometry.location.lng()
+                    };
+                    pickupInput.value = place.formatted_address || place.name;
+                    calculateAllDistances();
+                }
+            });
+        }
 
-        // Listen for place selection
-        pickupAutocomplete.addListener('place_changed', function() {
-            const place = pickupAutocomplete.getPlace();
-            if (place.geometry) {
-                pickupCoords = {
-                    lat: place.geometry.location.lat(),
-                    lon: place.geometry.location.lng()
-                };
-                pickupInput.value = place.formatted_address || place.name;
-                calculateDistance();
-            }
-        });
-
-        dropoffAutocomplete.addListener('place_changed', function() {
-            const place = dropoffAutocomplete.getPlace();
-            if (place.geometry) {
-                dropoffCoords = {
-                    lat: place.geometry.location.lat(),
-                    lon: place.geometry.location.lng()
-                };
-                dropoffInput.value = place.formatted_address || place.name;
-                calculateDistance();
-            }
-        });
+        if (dropoffInput) {
+            dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, options);
+            
+            dropoffAutocomplete.addListener('place_changed', function() {
+                const place = dropoffAutocomplete.getPlace();
+                if (place.geometry) {
+                    dropoffCoords = {
+                        lat: place.geometry.location.lat(),
+                        lon: place.geometry.location.lng()
+                    };
+                    dropoffInput.value = place.formatted_address || place.name;
+                    calculateAllDistances();
+                }
+            });
+        }
         
         console.log('Google Maps autocomplete initialized successfully!');
     } catch (error) {
