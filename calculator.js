@@ -798,23 +798,54 @@ function parseCoordinates(str) {
 function shareQuote() {
     const distance = parseFloat(document.getElementById('distanceValue').textContent);
     const total = document.getElementById('totalPrice').textContent;
-    const fuelCost = document.getElementById('fuelCostDisplay').textContent;
-    const profit = document.getElementById('profitDisplay').textContent;
     const from = document.getElementById('fromLocation').value;
     const to = document.getElementById('toLocation').value;
     
-    const message = `MH TOWING - Quote\n\nFrom: ${from}\nTo: ${to}\nDistance: ${distance.toFixed(2)} km\n\nCustomer Price: ${total}\nFuel Cost: ${fuelCost}\nProfit: ${profit}\n\nContact: 061 453 2160`;
+    // Get route mode
+    const routeMode = document.querySelector('input[name="routeMode"]:checked').value;
+    let routeDetails = '';
+    
+    if (routeMode === 'workshop') {
+        const workshopLocation = document.getElementById('workshopLocation').value || '784 Gopalall Hurbans, Tongaat';
+        routeDetails = `\nRoute:\n• Workshop to Pickup\n• Pickup to Delivery\n• Delivery to Workshop\n\nWorkshop: ${workshopLocation}`;
+    }
+    
+    // Professional quotation message (no fuel costs or profit)
+    const message = `━━━━━━━━━━━━━━━━━━━━━━
+MH TOWING - QUOTATION
+━━━━━━━━━━━━━━━━━━━━━━
+
+PICKUP LOCATION:
+${from}
+
+DELIVERY LOCATION:
+${to}${routeDetails}
+
+DISTANCE: ${distance.toFixed(2)} km
+
+QUOTED PRICE: ${total}
+
+━━━━━━━━━━━━━━━━━━━━━━
+Contact us:
+📞 061 453 2160
+📍 784 Gopalall Hurbans
+   Tongaat, KZN
+━━━━━━━━━━━━━━━━━━━━━━
+
+This quote is valid for 7 days.
+Terms and conditions apply.`;
     
     if (navigator.share) {
         navigator.share({
-            title: 'MH Towing Quote',
+            title: 'MH Towing Quotation',
             text: message
         }).catch(err => console.log('Error sharing:', err));
     } else {
         // Fallback: copy to clipboard
         navigator.clipboard.writeText(message).then(() => {
-            alert('Quote copied to clipboard!');
+            alert('✅ Professional quotation copied to clipboard!\n\nYou can now paste it into WhatsApp, SMS, or email.');
         }).catch(() => {
+            // If clipboard fails, show in alert
             alert(message);
         });
     }

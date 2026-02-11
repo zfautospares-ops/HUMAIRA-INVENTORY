@@ -548,3 +548,18 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(255,152,0,0.4);
 }
+
+.backup-records {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.backup-records span {
+    background: #f0f0ff;
+    padding: 3px 8px;
+    border-radius: 10px;
+}

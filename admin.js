@@ -349,6 +349,13 @@ function displayBackups(backups) {
                     <span>📅 ${formatDate(backup.created)}</span>
                     <span>💾 ${formatFileSize(backup.size)}</span>
                 </div>
+                ${backup.recordCounts ? `
+                <div class="backup-records">
+                    <span>📋 ${backup.recordCounts.jobcards} job cards</span>
+                    <span>🔧 ${backup.recordCounts.spares} spares</span>
+                    <span>💰 ${backup.recordCounts.sales} sales</span>
+                </div>
+                ` : ''}
             </div>
             <div class="backup-actions">
                 <button onclick="downloadBackup('${backup.filename}')" class="btn-download" title="Download">⬇️</button>

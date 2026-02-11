@@ -3,29 +3,58 @@ const path = require('path');
 
 // Backup configuration
 const BACKUP_DIR = './backups';
-const DATA_FILE = './data/jobcards.json';
+const DATA_DIR = './data';
+const DATA_FILES = {
+    jobcards: path.join(DATA_DIR, 'jobcards.json'),
+    spares: path.join(DATA_DIR, 'spares.json'),
+    sales: path.join(DATA_DIR, 'sales.json')
+};
 
 // Ensure backup directory exists
 if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-// Create backup with timestamp
+// Create comprehensive backup with timestamp
 function createBackup() {
     try {
-        if (!fs.existsSync(DATA_FILE)) {
-            console.log('No data file to backup');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupFileName = `complete-backup-${timestamp}.json`;
+        const backupPath = path.join(BACKUP_DIR, backupFileName);
+
+        // Collect all data
+        const backupData = {
+            timestamp: new Date().toISOString(),
+            version: '2.0',
+            data: {}
+        };
+
+        // Backup each data file
+        let hasData = false;
+        Object.keys(DATA_FILES).forEach(key => {
+            const filePath = DATA_FILES[key];
+            if (fs.existsSync(filePath)) {
+                const data = fs.readFileSync(filePath, 'utf8');
+                backupData.data[key] = JSON.parse(data);
+                hasData = true;
+            } else {
+                backupData.data[key] = [];
+            }
+        });
+
+        if (!hasData) {
+            console.log('No data files to backup');
             return null;
         }
 
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupFileName = `jobcards-backup-${timestamp}.json`;
-        const backupPath = path.join(BACKUP_DIR, backupFileName);
+        // Write comprehensive backup
+        fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
 
-        // Copy data file to backup
-        fs.copyFileSync(DATA_FILE, backupPath);
-
-        console.log(`✅ Backup created: ${backupFileName}`);
+        console.log(`✅ Complete backup created: ${backupFileName}`);
+        console.log(`   - Job Cards: ${backupData.data.jobcards.length} records`);
+        console.log(`   - Spares: ${backupData.data.spares.length} items`);
+        console.log(`   - Sales: ${backupData.data.sales.length} transactions`);
+        
         return backupPath;
     } catch (error) {
         console.error('❌ Backup failed:', error);
@@ -68,11 +97,28 @@ function listBackups() {
             .map(file => {
                 const filePath = path.join(BACKUP_DIR, file);
                 const stats = fs.statSync(filePath);
+                
+                // Try to read backup to get record counts
+                let recordCounts = null;
+                try {
+                    const backupContent = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                    if (backupContent.data) {
+                        recordCounts = {
+                            jobcards: backupContent.data.jobcards?.length || 0,
+                            spares: backupContent.data.spares?.length || 0,
+                            sales: backupContent.data.sales?.length || 0
+                        };
+                    }
+                } catch (e) {
+                    // Legacy backup format
+                }
+                
                 return {
                     filename: file,
                     path: filePath,
                     size: stats.size,
-                    created: stats.mtime
+                    created: stats.mtime,
+                    recordCounts
                 };
             })
             .sort((a, b) => b.created - a.created);
@@ -94,9 +140,24 @@ function restoreBackup(backupFileName) {
         // Create backup of current data before restoring
         createBackup();
 
-        // Restore backup
-        fs.copyFileSync(backupPath, DATA_FILE);
-        console.log(`✅ Restored from backup: ${backupFileName}`);
+        // Read backup file
+        const backupContent = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+        
+        // Check if it's new format (v2.0) or legacy
+        if (backupContent.data) {
+            // New format - restore all data files
+            Object.keys(DATA_FILES).forEach(key => {
+                const filePath = DATA_FILES[key];
+                const data = backupContent.data[key] || [];
+                fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+            });
+            console.log(`✅ Restored complete backup: ${backupFileName}`);
+        } else {
+            // Legacy format - restore only jobcards
+            fs.writeFileSync(DATA_FILES.jobcards, JSON.stringify(backupContent, null, 2));
+            console.log(`✅ Restored legacy backup: ${backupFileName}`);
+        }
+        
         return true;
     } catch (error) {
         console.error('❌ Restore failed:', error);
@@ -107,6 +168,7 @@ function restoreBackup(backupFileName) {
 // Schedule automatic backups
 function scheduleBackups(intervalHours = 24) {
     console.log(`📅 Scheduling automatic backups every ${intervalHours} hours`);
+    console.log(`   Backing up: Job Cards, Spares, Sales`);
     
     // Create initial backup
     createBackup();
