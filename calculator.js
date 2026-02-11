@@ -131,54 +131,89 @@ function initAutocomplete() {
 
 // Manual calculate button
 function manualCalculate() {
+    console.log('Manual calculate clicked');
+    
     // Try to geocode all addresses
     const workshopAddr = document.getElementById('workshopLocation').value;
     const fromAddr = document.getElementById('fromLocation').value;
     const toAddr = document.getElementById('toLocation').value;
     
-    if (isWorkshopRoute && workshopAddr) {
-        geocodeAddress(workshopAddr, 'workshop');
+    console.log('Addresses:', { workshop: workshopAddr, from: fromAddr, to: toAddr });
+    console.log('Route type:', isWorkshopRoute ? 'workshop' : 'simple');
+    
+    let geocodeCount = 0;
+    let geocodeNeeded = 0;
+    
+    if (isWorkshopRoute && workshopAddr && !workshopCoords) {
+        geocodeNeeded++;
+        geocodeAddress(workshopAddr, 'workshop').then(() => {
+            geocodeCount++;
+            if (geocodeCount === geocodeNeeded) calculateRoutes();
+        });
     }
-    if (fromAddr) {
-        geocodeAddress(fromAddr, 'from');
+    if (fromAddr && !fromCoords) {
+        geocodeNeeded++;
+        geocodeAddress(fromAddr, 'from').then(() => {
+            geocodeCount++;
+            if (geocodeCount === geocodeNeeded) calculateRoutes();
+        });
     }
-    if (toAddr) {
-        geocodeAddress(toAddr, 'to');
+    if (toAddr && !toCoords) {
+        geocodeNeeded++;
+        geocodeAddress(toAddr, 'to').then(() => {
+            geocodeCount++;
+            if (geocodeCount === geocodeNeeded) calculateRoutes();
+        });
     }
     
-    // Wait a bit for geocoding, then calculate
-    setTimeout(() => {
+    // If all coords already exist, calculate immediately
+    if (geocodeNeeded === 0) {
+        console.log('All coords exist, calculating...');
         calculateRoutes();
-    }, 1500);
+    }
 }
 
 // Geocode address to get coordinates
 function geocodeAddress(address, type) {
-    if (!google || !google.maps) return;
-    
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ address: address, region: 'za' }, function(results, status) {
-        if (status === 'OK' && results[0]) {
-            const location = results[0].geometry.location;
-            const coords = {
-                lat: location.lat(),
-                lon: location.lng()
-            };
-            
-            console.log(`Geocoded ${type}:`, coords);
-            
-            if (type === 'from') {
-                fromCoords = coords;
-            } else if (type === 'to') {
-                toCoords = coords;
-            } else if (type === 'workshop') {
-                workshopCoords = coords;
-            }
-            
-            calculateRoutes();
-        } else {
-            console.error('Geocoding failed:', status);
+    return new Promise((resolve, reject) => {
+        if (!google || !google.maps || !google.maps.Geocoder) {
+            console.error('Google Maps Geocoder not available');
+            reject('Geocoder not available');
+            return;
         }
+        
+        console.log(`Geocoding ${type}: ${address}`);
+        const geocoder = new google.maps.Geocoder();
+        
+        geocoder.geocode({ address: address, region: 'za' }, function(results, status) {
+            console.log(`Geocode ${type} status:`, status);
+            
+            if (status === 'OK' && results[0]) {
+                const location = results[0].geometry.location;
+                const coords = {
+                    lat: location.lat(),
+                    lon: location.lng()
+                };
+                
+                console.log(`Geocoded ${type}:`, coords);
+                
+                if (type === 'from') {
+                    fromCoords = coords;
+                } else if (type === 'to') {
+                    toCoords = coords;
+                } else if (type === 'workshop') {
+                    workshopCoords = coords;
+                }
+                
+                resolve(coords);
+            } else {
+                console.error(`Geocoding ${type} failed:`, status);
+                if (status === 'REQUEST_DENIED') {
+                    alert('Geocoding API not enabled. Please enable "Geocoding API" in Google Cloud Console.');
+                }
+                reject(status);
+            }
+        });
     });
 }
 
