@@ -113,7 +113,6 @@ function initAutocomplete() {
                         lon: place.geometry.location.lng()
                     };
                     pickupInput.value = place.formatted_address || place.name;
-                    calculateAllDistances();
                 }
             });
         }
@@ -129,7 +128,6 @@ function initAutocomplete() {
                         lon: place.geometry.location.lng()
                     };
                     dropoffInput.value = place.formatted_address || place.name;
-                    calculateAllDistances();
                 }
             });
         }
@@ -184,9 +182,6 @@ function getLocation(type) {
                 document.getElementById(`${type}Location`).value = locationString;
                 additionalStopsCoords[stopNum - 1] = { lat, lon };
             }
-            
-            // Calculate distance if locations are set
-            calculateAllDistances();
             
             button.textContent = '📍 Use Current GPS';
             button.disabled = false;
@@ -493,12 +488,11 @@ function addStop() {
                 };
                 additionalStopsCoords[stopCounter - 1] = coords;
                 input.value = place.formatted_address || place.name;
-                calculateAllDistances();
             }
         });
         
         input.addEventListener('blur', function() {
-            geocodeAndCalculate(this.value, `stop${stopCounter}`);
+            geocodeAddress(this.value, `stop${stopCounter}`);
         });
     }
 }
@@ -509,7 +503,6 @@ function removeStop(stopNum) {
     if (stopDiv) {
         stopDiv.remove();
         delete additionalStopsCoords[stopNum - 1];
-        calculateAllDistances();
     }
 }
 
@@ -607,19 +600,63 @@ function showRouteMap() {
 
 // Allow manual location entry to trigger distance calculation with geocoding
 document.getElementById('workshopLocation').addEventListener('blur', function() {
-    geocodeAndCalculate(this.value, 'workshop');
+    geocodeAddress(this.value, 'workshop');
 });
 
 document.getElementById('pickupLocation').addEventListener('blur', function() {
-    geocodeAndCalculate(this.value, 'pickup');
+    geocodeAddress(this.value, 'pickup');
 });
 
 document.getElementById('dropoffLocation').addEventListener('blur', function() {
-    geocodeAndCalculate(this.value, 'dropoff');
+    geocodeAddress(this.value, 'dropoff');
 });
 
-// Geocode address and calculate distances
-function geocodeAndCalculate(address, type) {
+// Manual calculate distance button
+function manualCalculateDistance() {
+    const workshopInput = document.getElementById('workshopLocation').value;
+    const pickupInput = document.getElementById('pickupLocation').value;
+    const dropoffInput = document.getElementById('dropoffLocation').value;
+    
+    if (!pickupInput) {
+        alert('⚠️ Please enter a pickup location');
+        return;
+    }
+    
+    // Show loading message
+    const routeSegments = document.getElementById('routeSegments');
+    const distanceBreakdown = document.getElementById('distanceBreakdown');
+    routeSegments.innerHTML = '<div class="loading" style="padding: 10px; text-align: center; color: #667eea;">📍 Calculating distances...</div>';
+    distanceBreakdown.style.display = 'block';
+    
+    // Geocode all addresses and then calculate
+    Promise.all([
+        workshopInput ? geocodeAddressPromise(workshopInput, 'workshop') : Promise.resolve(),
+        geocodeAddressPromise(pickupInput, 'pickup'),
+        dropoffInput ? geocodeAddressPromise(dropoffInput, 'dropoff') : Promise.resolve()
+    ]).then(() => {
+        // Also geocode any additional stops
+        const stopPromises = [];
+        document.querySelectorAll('.additional-stop').forEach((stopDiv, index) => {
+            const input = stopDiv.querySelector('.stop-input');
+            if (input && input.value) {
+                stopPromises.push(geocodeAddressPromise(input.value, `stop${index + 1}`));
+            }
+        });
+        
+        return Promise.all(stopPromises);
+    }).then(() => {
+        // Now calculate distances
+        calculateAllDistances();
+    }).catch(error => {
+        console.error('Error geocoding addresses:', error);
+        alert('❌ Error calculating distances. Please check your addresses and try again.');
+        routeSegments.innerHTML = '';
+        distanceBreakdown.style.display = 'none';
+    });
+}
+
+// Geocode address (without auto-calculating)
+function geocodeAddress(address, type) {
     if (!address || address.trim() === '') return;
     
     // Check if it's already coordinates
@@ -632,7 +669,6 @@ function geocodeAndCalculate(address, type) {
             const stopNum = parseInt(type.replace('stop', ''));
             additionalStopsCoords[stopNum - 1] = coords;
         }
-        calculateAllDistances();
         return;
     }
     
@@ -652,13 +688,63 @@ function geocodeAndCalculate(address, type) {
                     additionalStopsCoords[stopNum - 1] = coords;
                 }
                 
-                calculateAllDistances();
                 console.log(`Geocoded ${type}: ${address} to`, coords);
             } else {
                 console.log(`Geocoding failed for ${type}: ${status}`);
             }
         });
     }
+}
+
+// Geocode address and return promise (for manual calculate button)
+function geocodeAddressPromise(address, type) {
+    return new Promise((resolve, reject) => {
+        if (!address || address.trim() === '') {
+            resolve();
+            return;
+        }
+        
+        // Check if it's already coordinates
+        const coords = parseCoordinates(address);
+        if (coords) {
+            if (type === 'workshop') workshopCoords = coords;
+            else if (type === 'pickup') pickupCoords = coords;
+            else if (type === 'dropoff') dropoffCoords = coords;
+            else if (type.startsWith('stop')) {
+                const stopNum = parseInt(type.replace('stop', ''));
+                additionalStopsCoords[stopNum - 1] = coords;
+            }
+            resolve();
+            return;
+        }
+        
+        // Use Google Maps Geocoding API if available
+        if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: address, componentRestrictions: { country: 'za' } }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    const location = results[0].geometry.location;
+                    const coords = { lat: location.lat(), lon: location.lng() };
+                    
+                    if (type === 'workshop') workshopCoords = coords;
+                    else if (type === 'pickup') pickupCoords = coords;
+                    else if (type === 'dropoff') dropoffCoords = coords;
+                    else if (type.startsWith('stop')) {
+                        const stopNum = parseInt(type.replace('stop', ''));
+                        additionalStopsCoords[stopNum - 1] = coords;
+                    }
+                    
+                    console.log(`Geocoded ${type}: ${address} to`, coords);
+                    resolve();
+                } else {
+                    console.log(`Geocoding failed for ${type}: ${status}`);
+                    reject(new Error(`Failed to geocode ${type}`));
+                }
+            });
+        } else {
+            reject(new Error('Google Maps Geocoder not available'));
+        }
+    });
 }
 
 // Parse coordinates from string format "lat, lon"
