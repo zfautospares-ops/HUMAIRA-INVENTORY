@@ -360,6 +360,7 @@ function displayBackups(backups) {
             <div class="backup-actions">
                 <button onclick="downloadBackup('${backup.filename}')" class="btn-download" title="Download">⬇️</button>
                 <button onclick="restoreBackup('${backup.filename}')" class="btn-restore" title="Restore">♻️</button>
+                <button onclick="deleteBackup('${backup.filename}')" class="btn-delete-backup" title="Delete">🗑️</button>
             </div>
         </div>
     `).join('');
@@ -414,6 +415,29 @@ function restoreBackup(filename) {
 
 function downloadBackup(filename) {
     window.location.href = `https://mh-towing-job-cards.onrender.com/api/backups/download/${filename}`;
+}
+
+function deleteBackup(filename) {
+    if (!confirm(`⚠️ WARNING: Are you sure you want to delete this backup?\n\n"${filename}"\n\nThis action cannot be undone!`)) {
+        return;
+    }
+
+    fetch(`https://mh-towing-job-cards.onrender.com/api/backups/${filename}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Backup deleted successfully!');
+            loadBackups();
+        } else {
+            alert('❌ Failed to delete backup: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting backup:', error);
+        alert('❌ Error deleting backup');
+    });
 }
 
 function formatFileSize(bytes) {

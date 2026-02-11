@@ -403,6 +403,23 @@ app.get('/api/backups/download/:filename', (req, res) => {
     }
 });
 
+// Delete backup file
+app.delete('/api/backups/:filename', (req, res) => {
+    try {
+        const { filename } = req.params;
+        const success = backup.deleteBackup(filename);
+        
+        if (success) {
+            res.json({ success: true, message: 'Backup deleted successfully' });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to delete backup' });
+        }
+    } catch (error) {
+        console.error('Error deleting backup:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
     console.log(`Admin dashboard: http://localhost:${PORT}/admin.html`);

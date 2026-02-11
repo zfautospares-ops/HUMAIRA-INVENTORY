@@ -165,6 +165,24 @@ function restoreBackup(backupFileName) {
     }
 }
 
+// Delete backup
+function deleteBackup(backupFileName) {
+    try {
+        const backupPath = path.join(BACKUP_DIR, backupFileName);
+        
+        if (!fs.existsSync(backupPath)) {
+            throw new Error('Backup file not found');
+        }
+
+        fs.unlinkSync(backupPath);
+        console.log(`🗑️ Deleted backup: ${backupFileName}`);
+        return true;
+    } catch (error) {
+        console.error('❌ Delete failed:', error);
+        return false;
+    }
+}
+
 // Schedule automatic backups
 function scheduleBackups(intervalHours = 24) {
     console.log(`📅 Scheduling automatic backups every ${intervalHours} hours`);
@@ -186,5 +204,6 @@ module.exports = {
     cleanOldBackups,
     listBackups,
     restoreBackup,
+    deleteBackup,
     scheduleBackups
 };

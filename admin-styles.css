@@ -482,7 +482,8 @@ body {
 }
 
 .btn-download,
-.btn-restore {
+.btn-restore,
+.btn-delete-backup {
     padding: 8px 12px;
     border: none;
     border-radius: 6px;
@@ -508,6 +509,16 @@ body {
 
 .btn-restore:hover {
     background: #f57c00;
+    transform: scale(1.1);
+}
+
+.btn-delete-backup {
+    background: #f44336;
+    color: white;
+}
+
+.btn-delete-backup:hover {
+    background: #d32f2f;
     transform: scale(1.1);
 }
 
