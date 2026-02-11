@@ -621,20 +621,28 @@ function saveJobCard(jobCard) {
         },
         body: JSON.stringify(jobCard)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            console.log('Job card saved to server:', data.jobId);
+            console.log('✅ Job card saved to server successfully:', data.jobId);
+            alert('✅ Job card saved to server successfully!');
         } else {
-            throw new Error('Server save failed');
+            throw new Error('Server save failed: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
-        console.error('Error saving to server, saving locally:', error);
+        console.error('❌ Error saving to server, saving locally:', error);
+        alert('⚠️ Could not reach server. Job card saved locally on this device. Please sync when back online.');
         // Fallback to localStorage if server is unavailable
         const savedJobs = JSON.parse(localStorage.getItem('jobCards') || '[]');
         savedJobs.push(jobCard);
         localStorage.setItem('jobCards', JSON.stringify(savedJobs));
+        console.log('📱 Saved to localStorage. Total local jobs:', savedJobs.length);
     });
 }
 
@@ -691,3 +699,55 @@ window.addEventListener('offline', () => {
         document.body.appendChild(indicator);
     }
 });
+
+// Sync locally saved job cards to server
+function syncLocalJobs() {
+    const savedJobs = JSON.parse(localStorage.getItem('jobCards') || '[]');
+    
+    if (savedJobs.length === 0) {
+        alert('✅ No local job cards to sync. All jobs are already on the server.');
+        return;
+    }
+    
+    if (!confirm(`Found ${savedJobs.length} job card(s) saved locally. Sync them to the server now?`)) {
+        return;
+    }
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    const syncPromises = savedJobs.map(jobCard => {
+        return fetch('https://mh-towing-job-cards.onrender.com/api/jobcards', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(jobCard)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                successCount++;
+                return true;
+            } else {
+                failCount++;
+                return false;
+            }
+        })
+        .catch(error => {
+            console.error('Error syncing job:', error);
+            failCount++;
+            return false;
+        });
+    });
+    
+    Promise.all(syncPromises).then(() => {
+        if (successCount > 0) {
+            // Clear localStorage after successful sync
+            localStorage.removeItem('jobCards');
+            alert(`✅ Successfully synced ${successCount} job card(s) to server!${failCount > 0 ? `\n⚠️ ${failCount} failed to sync.` : ''}`);
+        } else {
+            alert(`❌ Failed to sync job cards. Please check your internet connection and try again.`);
+        }
+    });
+}
