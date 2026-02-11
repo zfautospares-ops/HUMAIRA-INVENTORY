@@ -3,9 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const backup = require('./backup');
+const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize database on startup
+db.initDatabase().catch(err => console.error('Database initialization error:', err));
 
 // Data file paths
 const DATA_DIR = './data';
@@ -59,45 +63,6 @@ if (!fs.existsSync(PRICING_CONFIG_FILE)) {
 // Start automatic backup system (every 24 hours)
 backup.scheduleBackups(24);
 
-// Helper functions
-function readJobCards() {
-    const data = fs.readFileSync(JOB_CARDS_FILE, 'utf8');
-    return JSON.parse(data);
-}
-
-function writeJobCards(jobCards) {
-    fs.writeFileSync(JOB_CARDS_FILE, JSON.stringify(jobCards, null, 2));
-    // Create backup after every write
-    backup.createBackup();
-}
-
-function readSpares() {
-    const data = fs.readFileSync(SPARES_FILE, 'utf8');
-    return JSON.parse(data);
-}
-
-function writeSpares(spares) {
-    fs.writeFileSync(SPARES_FILE, JSON.stringify(spares, null, 2));
-}
-
-function readSales() {
-    const data = fs.readFileSync(SALES_FILE, 'utf8');
-    return JSON.parse(data);
-}
-
-function writeSales(sales) {
-    fs.writeFileSync(SALES_FILE, JSON.stringify(sales, null, 2));
-}
-
-function readPricingConfig() {
-    const data = fs.readFileSync(PRICING_CONFIG_FILE, 'utf8');
-    return JSON.parse(data);
-}
-
-function writePricingConfig(config) {
-    fs.writeFileSync(PRICING_CONFIG_FILE, JSON.stringify(config, null, 2));
-}
-
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -106,14 +71,12 @@ app.use(express.static('.'));
 // API Routes
 
 // Save job card
-app.post('/api/jobcards', (req, res) => {
+app.post('/api/jobcards', async (req, res) => {
     try {
         const jobCard = req.body;
         jobCard.created_at = new Date().toISOString();
         
-        const jobCards = readJobCards();
-        jobCards.push(jobCard);
-        writeJobCards(jobCards);
+        await db.saveJobCard(jobCard);
         
         res.json({ success: true, jobId: jobCard.jobId });
     } catch (error) {
@@ -123,9 +86,9 @@ app.post('/api/jobcards', (req, res) => {
 });
 
 // Get all job cards
-app.get('/api/jobcards', (req, res) => {
+app.get('/api/jobcards', async (req, res) => {
     try {
-        const jobCards = readJobCards();
+        const jobCards = await db.getAllJobCards();
         // Sort by created_at descending
         jobCards.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         res.json(jobCards);
@@ -136,10 +99,9 @@ app.get('/api/jobcards', (req, res) => {
 });
 
 // Get single job card
-app.get('/api/jobcards/:jobId', (req, res) => {
+app.get('/api/jobcards/:jobId', async (req, res) => {
     try {
-        const jobCards = readJobCards();
-        const jobCard = jobCards.find(j => j.jobId === req.params.jobId);
+        const jobCard = await db.getJobCard(req.params.jobId);
         
         if (!jobCard) {
             return res.status(404).json({ error: 'Job card not found' });
@@ -153,11 +115,9 @@ app.get('/api/jobcards/:jobId', (req, res) => {
 });
 
 // Delete job card
-app.delete('/api/jobcards/:jobId', (req, res) => {
+app.delete('/api/jobcards/:jobId', async (req, res) => {
     try {
-        let jobCards = readJobCards();
-        jobCards = jobCards.filter(j => j.jobId !== req.params.jobId);
-        writeJobCards(jobCards);
+        await db.deleteJobCard(req.params.jobId);
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting job card:', error);
@@ -166,29 +126,28 @@ app.delete('/api/jobcards/:jobId', (req, res) => {
 });
 
 // Update job card
-app.put('/api/jobcards/:jobId', (req, res) => {
+app.put('/api/jobcards/:jobId', async (req, res) => {
     try {
-        const jobCards = readJobCards();
-        const index = jobCards.findIndex(j => j.jobId === req.params.jobId);
+        const jobCard = await db.getJobCard(req.params.jobId);
         
-        if (index === -1) {
+        if (!jobCard) {
             return res.status(404).json({ success: false, error: 'Job card not found' });
         }
         
         // Preserve original data and update with new data
-        jobCards[index] = {
-            ...jobCards[index],
+        const updatedJobCard = {
+            ...jobCard,
             customer: req.body.customer,
             vehicle: req.body.vehicle,
             service: {
-                ...jobCards[index].service,
+                ...jobCard.service,
                 ...req.body.service
             },
             notes: req.body.notes,
             updated_at: new Date().toISOString()
         };
         
-        writeJobCards(jobCards);
+        await db.saveJobCard(updatedJobCard);
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating job card:', error);
@@ -197,17 +156,16 @@ app.put('/api/jobcards/:jobId', (req, res) => {
 });
 
 // Update job card pricing
-app.put('/api/jobcards/:jobId/pricing', (req, res) => {
+app.put('/api/jobcards/:jobId/pricing', async (req, res) => {
     try {
-        const jobCards = readJobCards();
-        const index = jobCards.findIndex(j => j.jobId === req.params.jobId);
+        const jobCard = await db.getJobCard(req.params.jobId);
         
-        if (index === -1) {
+        if (!jobCard) {
             return res.status(404).json({ success: false, error: 'Job card not found' });
         }
         
-        jobCards[index].pricing = req.body;
-        writeJobCards(jobCards);
+        jobCard.pricing = req.body;
+        await db.saveJobCard(jobCard);
         
         res.json({ success: true });
     } catch (error) {
@@ -217,9 +175,9 @@ app.put('/api/jobcards/:jobId/pricing', (req, res) => {
 });
 
 // Stats endpoint
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', async (req, res) => {
     try {
-        const jobCards = readJobCards();
+        const jobCards = await db.getAllJobCards();
         const today = new Date().toISOString().split('T')[0];
         
         const todayJobs = jobCards.filter(j => 
@@ -273,9 +231,9 @@ app.get('/api/stats', (req, res) => {
 });
 
 // Get next job number
-app.get('/api/next-job-number', (req, res) => {
+app.get('/api/next-job-number', async (req, res) => {
     try {
-        const jobCards = readJobCards();
+        const jobCards = await db.getAllJobCards();
         const nextNumber = jobCards.length + 1;
         const year = new Date().getFullYear();
         const jobNumber = `MHT-${year}-${String(nextNumber).padStart(4, '0')}`;
@@ -289,9 +247,9 @@ app.get('/api/next-job-number', (req, res) => {
 // ===== SPARES INVENTORY API ROUTES =====
 
 // Get all spares
-app.get('/api/spares', (req, res) => {
+app.get('/api/spares', async (req, res) => {
     try {
-        const spares = readSpares();
+        const spares = await db.getAllSpares();
         spares.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
         res.json(spares);
     } catch (error) {
@@ -301,9 +259,9 @@ app.get('/api/spares', (req, res) => {
 });
 
 // Get single spare
-app.get('/api/spares/:id', (req, res) => {
+app.get('/api/spares/:id', async (req, res) => {
     try {
-        const spares = readSpares();
+        const spares = await db.getAllSpares();
         const spare = spares.find(s => s.id === req.params.id);
         
         if (!spare) {
@@ -318,12 +276,10 @@ app.get('/api/spares/:id', (req, res) => {
 });
 
 // Add new spare
-app.post('/api/spares', (req, res) => {
+app.post('/api/spares', async (req, res) => {
     try {
         const spare = req.body;
-        const spares = readSpares();
-        spares.push(spare);
-        writeSpares(spares);
+        await db.saveSpare(spare);
         res.json({ success: true, id: spare.id });
     } catch (error) {
         console.error('Error adding spare:', error);
@@ -332,17 +288,9 @@ app.post('/api/spares', (req, res) => {
 });
 
 // Update spare
-app.put('/api/spares/:id', (req, res) => {
+app.put('/api/spares/:id', async (req, res) => {
     try {
-        const spares = readSpares();
-        const index = spares.findIndex(s => s.id === req.params.id);
-        
-        if (index === -1) {
-            return res.status(404).json({ success: false, error: 'Item not found' });
-        }
-        
-        spares[index] = req.body;
-        writeSpares(spares);
+        await db.saveSpare(req.body);
         res.json({ success: true });
     } catch (error) {
         console.error('Error updating spare:', error);
@@ -351,11 +299,9 @@ app.put('/api/spares/:id', (req, res) => {
 });
 
 // Delete spare
-app.delete('/api/spares/:id', (req, res) => {
+app.delete('/api/spares/:id', async (req, res) => {
     try {
-        let spares = readSpares();
-        spares = spares.filter(s => s.id !== req.params.id);
-        writeSpares(spares);
+        await db.deleteSpare(req.params.id);
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting spare:', error);
@@ -364,9 +310,9 @@ app.delete('/api/spares/:id', (req, res) => {
 });
 
 // Get spares stats
-app.get('/api/spares/stats', (req, res) => {
+app.get('/api/spares/stats', async (req, res) => {
     try {
-        const spares = readSpares();
+        const spares = await db.getAllSpares();
         
         const totalItems = spares.length;
         const inStock = spares.filter(s => s.quantity > 0).length;
@@ -388,9 +334,9 @@ app.get('/api/spares/stats', (req, res) => {
 // ===== SALES API ROUTES =====
 
 // Get all sales
-app.get('/api/spares/sales', (req, res) => {
+app.get('/api/spares/sales', async (req, res) => {
     try {
-        const sales = readSales();
+        const sales = await db.getAllSales();
         sales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
         res.json(sales);
     } catch (error) {
@@ -400,12 +346,10 @@ app.get('/api/spares/sales', (req, res) => {
 });
 
 // Add new sale
-app.post('/api/spares/sales', (req, res) => {
+app.post('/api/spares/sales', async (req, res) => {
     try {
         const sale = req.body;
-        const sales = readSales();
-        sales.push(sale);
-        writeSales(sales);
+        await db.saveSale(sale);
         res.json({ success: true, id: sale.id });
     } catch (error) {
         console.error('Error adding sale:', error);
@@ -414,9 +358,9 @@ app.post('/api/spares/sales', (req, res) => {
 });
 
 // Get sales statistics
-app.get('/api/spares/sales/stats', (req, res) => {
+app.get('/api/spares/sales/stats', async (req, res) => {
     try {
-        const sales = readSales();
+        const sales = await db.getAllSales();
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -528,9 +472,32 @@ app.delete('/api/backups/:filename', (req, res) => {
 });
 
 // Get pricing configuration
-app.get('/api/pricing-config', (req, res) => {
+app.get('/api/pricing-config', async (req, res) => {
     try {
-        const config = readPricingConfig();
+        let config = await db.getPricingConfig();
+        
+        // If no config exists, create default
+        if (!config) {
+            config = {
+                ratePerKm: 15,
+                baseFees: {
+                    'tow': 300,
+                    'jumpstart': 150,
+                    'tire-change': 200,
+                    'lockout': 180,
+                    'fuel-delivery': 150,
+                    'winch-out': 400,
+                    'flatbed': 500,
+                    'accident-recovery': 600,
+                    'battery-replacement': 250,
+                    'other': 200
+                },
+                afterHoursPremium: 1.5,
+                weekendPremium: 1.2
+            };
+            await db.savePricingConfig(config);
+        }
+        
         res.json({ success: true, config });
     } catch (error) {
         console.error('Error reading pricing config:', error);
@@ -539,9 +506,9 @@ app.get('/api/pricing-config', (req, res) => {
 });
 
 // Save pricing configuration
-app.post('/api/pricing-config', (req, res) => {
+app.post('/api/pricing-config', async (req, res) => {
     try {
-        writePricingConfig(req.body);
+        await db.savePricingConfig(req.body);
         res.json({ success: true, message: 'Pricing configuration saved successfully' });
     } catch (error) {
         console.error('Error saving pricing config:', error);
