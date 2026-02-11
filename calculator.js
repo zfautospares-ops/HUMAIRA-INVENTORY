@@ -568,6 +568,32 @@ function toggleFuelMethod() {
     updatePricing();
 }
 
+// Update vehicle consumption based on type
+function updateVehicleConsumption() {
+    const vehicleType = document.getElementById('vehicleType').value;
+    const consumptionInput = document.getElementById('fuelConsumption');
+    
+    const consumptionRates = {
+        'light-truck': 12,
+        'medium-truck': 15,
+        'heavy-truck': 20,
+        'flatbed': 18,
+        'recovery': 22,
+        'super-heavy': 28
+    };
+    
+    if (vehicleType !== 'custom' && consumptionRates[vehicleType]) {
+        consumptionInput.value = consumptionRates[vehicleType];
+        consumptionInput.readOnly = true;
+        consumptionInput.style.background = '#f0f0f0';
+    } else {
+        consumptionInput.readOnly = false;
+        consumptionInput.style.background = '#fafafa';
+    }
+    
+    updatePricing();
+}
+
 // Calculate pricing
 function calculatePricing(distance) {
     const baseRate = parseFloat(document.getElementById('baseRate').value) || 0;
@@ -713,6 +739,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('baseRate').addEventListener('input', updatePricing);
     document.getElementById('perKmRate').addEventListener('input', updatePricing);
     document.getElementById('serviceType').addEventListener('change', updatePricing);
+    document.getElementById('vehicleType').addEventListener('change', updateVehicleConsumption);
     document.getElementById('fuelPrice').addEventListener('input', updatePricing);
     document.getElementById('fuelConsumption').addEventListener('input', updatePricing);
     document.getElementById('loadFactor').addEventListener('change', updatePricing);

@@ -160,6 +160,18 @@
                             📊 Most accurate method - calculates based on actual vehicle consumption
                         </div>
                         <div class="pricing-row">
+                            <label>Vehicle Type</label>
+                            <select id="vehicleType" onchange="updateVehicleConsumption()">
+                                <option value="custom">Custom</option>
+                                <option value="light-truck">Light Tow Truck (12 L/100km)</option>
+                                <option value="medium-truck" selected>Medium Tow Truck (15 L/100km)</option>
+                                <option value="heavy-truck">Heavy Tow Truck (20 L/100km)</option>
+                                <option value="flatbed">Flatbed Truck (18 L/100km)</option>
+                                <option value="recovery">Recovery Vehicle (22 L/100km)</option>
+                                <option value="super-heavy">Super Heavy Duty (28 L/100km)</option>
+                            </select>
+                        </div>
+                        <div class="pricing-row">
                             <label>Fuel Price (R/L)</label>
                             <input type="number" id="fuelPrice" value="24.50" step="0.10" oninput="updatePricing()">
                         </div>
