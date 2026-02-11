@@ -63,7 +63,10 @@ body {
 }
 
 .btn-refresh,
-.btn-new {
+.btn-new,
+.btn-backup,
+.btn-spares,
+.btn-settings {
     padding: 12px 24px;
     border: none;
     border-radius: 8px;
@@ -83,6 +86,17 @@ body {
 .btn-refresh:hover {
     background: #e0e0e0;
     transform: translateY(-2px);
+}
+
+.btn-settings {
+    background: #9c27b0;
+    color: white;
+}
+
+.btn-settings:hover {
+    background: #7b1fa2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(156,39,176,0.4);
 }
 
 .btn-new {
@@ -1099,5 +1113,66 @@ body {
     .job-actions button {
         flex: 1 1 calc(50% - 5px);
         min-width: 80px;
+    }
+}
+
+
+/* Settings Form Styles */
+.settings-form h3 {
+    color: #1e3c72;
+    font-size: 16px;
+    margin: 25px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.settings-form h3:first-of-type {
+    margin-top: 0;
+}
+
+.base-fees-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.settings-form .form-group {
+    margin-bottom: 15px;
+}
+
+.settings-form label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.settings-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.settings-form input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.settings-form small {
+    display: block;
+    color: #999;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+    .base-fees-grid {
+        grid-template-columns: 1fr;
     }
 }

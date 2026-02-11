@@ -21,6 +21,7 @@
             </div>
             <div class="header-actions">
                 <button onclick="refreshData()" class="btn-refresh">🔄 Refresh</button>
+                <button onclick="openSettingsModal()" class="btn-settings">⚙️ Settings</button>
                 <button onclick="openBackupModal()" class="btn-backup">💾 Backups</button>
                 <a href="spares.html" class="btn-spares">🔧 Spares</a>
                 <a href="calculator.html" class="btn-new">🧮 Calculator</a>
@@ -93,6 +94,87 @@
                     <div class="backup-list-container">
                         <h3>Available Backups</h3>
                         <div id="backupList" class="loading">Loading backups...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for pricing settings -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeSettingsModal()">&times;</span>
+                <div id="settingsModalBody">
+                    <h2>⚙️ Pricing Settings</h2>
+                    <div class="settings-form">
+                        <h3>Rate per Kilometer</h3>
+                        <div class="form-group">
+                            <label for="settings_ratePerKm">Rate per km (R)</label>
+                            <input type="number" id="settings_ratePerKm" step="0.01" min="0">
+                            <small>Amount charged per kilometer traveled</small>
+                        </div>
+                        
+                        <h3>Base Fees by Service Type</h3>
+                        <div class="base-fees-grid">
+                            <div class="form-group">
+                                <label>🚗 Tow Service (R)</label>
+                                <input type="number" id="settings_tow" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>⚡ Jump Start (R)</label>
+                                <input type="number" id="settings_jumpstart" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>🔧 Tire Change (R)</label>
+                                <input type="number" id="settings_tire-change" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>🔑 Lockout Service (R)</label>
+                                <input type="number" id="settings_lockout" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>⛽ Fuel Delivery (R)</label>
+                                <input type="number" id="settings_fuel-delivery" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>🪝 Winch Out (R)</label>
+                                <input type="number" id="settings_winch-out" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>🛻 Flatbed Tow (R)</label>
+                                <input type="number" id="settings_flatbed" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>🚨 Accident Recovery (R)</label>
+                                <input type="number" id="settings_accident-recovery" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>🔋 Battery Replacement (R)</label>
+                                <input type="number" id="settings_battery-replacement" step="0.01" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>📋 Other (R)</label>
+                                <input type="number" id="settings_other" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <h3>Premium Multipliers</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="settings_afterHours">After Hours (6pm-6am)</label>
+                                <input type="number" id="settings_afterHours" step="0.1" min="1">
+                                <small>Multiplier (e.g., 1.5 = 50% extra)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="settings_weekend">Weekend (Sat-Sun)</label>
+                                <input type="number" id="settings_weekend" step="0.1" min="1">
+                                <small>Multiplier (e.g., 1.2 = 20% extra)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button onclick="savePricingSettings()" class="btn-save-pricing">💾 Save Settings</button>
+                            <button onclick="closeSettingsModal()" class="btn-cancel">Cancel</button>
+                        </div>
                     </div>
                 </div>
             </div>

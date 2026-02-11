@@ -12,6 +12,7 @@ const DATA_DIR = './data';
 const JOB_CARDS_FILE = path.join(DATA_DIR, 'jobcards.json');
 const SPARES_FILE = path.join(DATA_DIR, 'spares.json');
 const SALES_FILE = path.join(DATA_DIR, 'sales.json');
+const PRICING_CONFIG_FILE = path.join(DATA_DIR, 'pricing-config.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -31,6 +32,28 @@ if (!fs.existsSync(SPARES_FILE)) {
 // Initialize sales file if it doesn't exist
 if (!fs.existsSync(SALES_FILE)) {
     fs.writeFileSync(SALES_FILE, JSON.stringify([]));
+}
+
+// Initialize pricing config file with defaults if it doesn't exist
+if (!fs.existsSync(PRICING_CONFIG_FILE)) {
+    const defaultConfig = {
+        ratePerKm: 15,
+        baseFees: {
+            'tow': 300,
+            'jumpstart': 150,
+            'tire-change': 200,
+            'lockout': 180,
+            'fuel-delivery': 150,
+            'winch-out': 400,
+            'flatbed': 500,
+            'accident-recovery': 600,
+            'battery-replacement': 250,
+            'other': 200
+        },
+        afterHoursPremium: 1.5,
+        weekendPremium: 1.2
+    };
+    fs.writeFileSync(PRICING_CONFIG_FILE, JSON.stringify(defaultConfig, null, 2));
 }
 
 // Start automatic backup system (every 24 hours)
@@ -64,6 +87,15 @@ function readSales() {
 
 function writeSales(sales) {
     fs.writeFileSync(SALES_FILE, JSON.stringify(sales, null, 2));
+}
+
+function readPricingConfig() {
+    const data = fs.readFileSync(PRICING_CONFIG_FILE, 'utf8');
+    return JSON.parse(data);
+}
+
+function writePricingConfig(config) {
+    fs.writeFileSync(PRICING_CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
 // Middleware
@@ -491,6 +523,28 @@ app.delete('/api/backups/:filename', (req, res) => {
         }
     } catch (error) {
         console.error('Error deleting backup:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get pricing configuration
+app.get('/api/pricing-config', (req, res) => {
+    try {
+        const config = readPricingConfig();
+        res.json({ success: true, config });
+    } catch (error) {
+        console.error('Error reading pricing config:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Save pricing configuration
+app.post('/api/pricing-config', (req, res) => {
+    try {
+        writePricingConfig(req.body);
+        res.json({ success: true, message: 'Pricing configuration saved successfully' });
+    } catch (error) {
+        console.error('Error saving pricing config:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

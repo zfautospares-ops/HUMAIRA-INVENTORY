@@ -417,11 +417,15 @@ function truncate(str, length) {
 window.onclick = function(event) {
     const modal = document.getElementById('jobModal');
     const backupModal = document.getElementById('backupModal');
+    const settingsModal = document.getElementById('settingsModal');
     if (event.target === modal) {
         closeModal();
     }
     if (event.target === backupModal) {
         closeBackupModal();
+    }
+    if (event.target === settingsModal) {
+        closeSettingsModal();
     }
 }
 
@@ -901,3 +905,82 @@ function saveJobEdit(jobId) {
         alert('❌ Error updating job card');
     });
 }
+
+
+// Settings Management Functions
+
+function openSettingsModal() {
+    // Load current settings
+    document.getElementById('settings_ratePerKm').value = PRICING_CONFIG.ratePerKm;
+    document.getElementById('settings_tow').value = PRICING_CONFIG.baseFees.tow;
+    document.getElementById('settings_jumpstart').value = PRICING_CONFIG.baseFees.jumpstart;
+    document.getElementById('settings_tire-change').value = PRICING_CONFIG.baseFees['tire-change'];
+    document.getElementById('settings_lockout').value = PRICING_CONFIG.baseFees.lockout;
+    document.getElementById('settings_fuel-delivery').value = PRICING_CONFIG.baseFees['fuel-delivery'];
+    document.getElementById('settings_winch-out').value = PRICING_CONFIG.baseFees['winch-out'];
+    document.getElementById('settings_flatbed').value = PRICING_CONFIG.baseFees.flatbed;
+    document.getElementById('settings_accident-recovery').value = PRICING_CONFIG.baseFees['accident-recovery'];
+    document.getElementById('settings_battery-replacement').value = PRICING_CONFIG.baseFees['battery-replacement'];
+    document.getElementById('settings_other').value = PRICING_CONFIG.baseFees.other;
+    document.getElementById('settings_afterHours').value = PRICING_CONFIG.afterHoursPremium;
+    document.getElementById('settings_weekend').value = PRICING_CONFIG.weekendPremium;
+    
+    document.getElementById('settingsModal').style.display = 'block';
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+function savePricingSettings() {
+    // Update PRICING_CONFIG object
+    PRICING_CONFIG.ratePerKm = parseFloat(document.getElementById('settings_ratePerKm').value);
+    PRICING_CONFIG.baseFees.tow = parseFloat(document.getElementById('settings_tow').value);
+    PRICING_CONFIG.baseFees.jumpstart = parseFloat(document.getElementById('settings_jumpstart').value);
+    PRICING_CONFIG.baseFees['tire-change'] = parseFloat(document.getElementById('settings_tire-change').value);
+    PRICING_CONFIG.baseFees.lockout = parseFloat(document.getElementById('settings_lockout').value);
+    PRICING_CONFIG.baseFees['fuel-delivery'] = parseFloat(document.getElementById('settings_fuel-delivery').value);
+    PRICING_CONFIG.baseFees['winch-out'] = parseFloat(document.getElementById('settings_winch-out').value);
+    PRICING_CONFIG.baseFees.flatbed = parseFloat(document.getElementById('settings_flatbed').value);
+    PRICING_CONFIG.baseFees['accident-recovery'] = parseFloat(document.getElementById('settings_accident-recovery').value);
+    PRICING_CONFIG.baseFees['battery-replacement'] = parseFloat(document.getElementById('settings_battery-replacement').value);
+    PRICING_CONFIG.baseFees.other = parseFloat(document.getElementById('settings_other').value);
+    PRICING_CONFIG.afterHoursPremium = parseFloat(document.getElementById('settings_afterHours').value);
+    PRICING_CONFIG.weekendPremium = parseFloat(document.getElementById('settings_weekend').value);
+    
+    // Save to server
+    fetch('https://mh-towing-job-cards.onrender.com/api/pricing-config', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(PRICING_CONFIG)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Pricing settings saved successfully!');
+            closeSettingsModal();
+        } else {
+            alert('❌ Failed to save settings: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error saving settings:', error);
+        alert('❌ Error saving settings');
+    });
+}
+
+// Load pricing config from server on page load
+window.addEventListener('load', () => {
+    fetch('https://mh-towing-job-cards.onrender.com/api/pricing-config')
+        .then(response => response.json())
+        .then(data => {
+            if (data.config) {
+                Object.assign(PRICING_CONFIG, data.config);
+            }
+        })
+        .catch(error => {
+            console.log('Using default pricing config');
+        });
+});
