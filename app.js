@@ -557,6 +557,24 @@ document.getElementById('jobCardForm').addEventListener('submit', function(e) {
 });
 
 function collectFormData() {
+    // Collect additional stops
+    const additionalStops = [];
+    document.querySelectorAll('.additional-stop').forEach((stopDiv) => {
+        const input = stopDiv.querySelector('.stop-input');
+        if (input && input.value) {
+            additionalStops.push(input.value);
+        }
+    });
+    
+    // Build route segments for saving
+    const routeSegments = [];
+    const segmentElements = document.querySelectorAll('#routeSegments .distance-item');
+    segmentElements.forEach((element) => {
+        const label = element.querySelector('.distance-label').textContent;
+        const value = element.querySelector('.distance-value').textContent;
+        routeSegments.push({ label, distance: value });
+    });
+    
     const formData = {
         jobId: currentJobId,
         timestamp: new Date().toISOString(),
@@ -577,14 +595,11 @@ function collectFormData() {
             type: document.getElementById('serviceType').value,
             workshopLocation: document.getElementById('workshopLocation').value,
             pickupLocation: document.getElementById('pickupLocation').value,
+            additionalStops: additionalStops,
             dropoffLocation: document.getElementById('dropoffLocation').value,
             mileage: document.getElementById('mileage').value,
-            distanceBreakdown: {
-                workshopToPickup: document.getElementById('distanceWorkshopToPickup').textContent.replace(' km', ''),
-                pickupToDropoff: document.getElementById('distancePickupToDropoff').textContent.replace(' km', ''),
-                dropoffToWorkshop: document.getElementById('distanceDropoffToWorkshop').textContent.replace(' km', ''),
-                total: document.getElementById('totalDistance').textContent.replace(' km', '')
-            }
+            routeSegments: routeSegments,
+            totalDistance: document.getElementById('totalDistance').textContent.replace(' km', '')
         },
         notes: {
             driver: document.getElementById('driverNotes').value,

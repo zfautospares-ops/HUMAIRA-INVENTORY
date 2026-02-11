@@ -164,22 +164,55 @@ function viewJobDetails(jobId) {
                             </div>
                         </div>
                         <div class="detail-item">
-                            <div class="detail-label">Mileage</div>
-                            <div class="detail-value">${job.service.mileage ? job.service.mileage + ' km' : 'N/A'}</div>
+                            <div class="detail-label">Total Distance</div>
+                            <div class="detail-value">${job.service.totalDistance || job.service.mileage || 'N/A'} km</div>
                         </div>
                     </div>
+                    
                     <div class="modal-grid" style="margin-top: 15px;">
+                        ${job.service.workshopLocation ? `
                         <div class="detail-item">
-                            <div class="detail-label">Pickup Location</div>
-                            <div class="detail-value">${job.service.pickupLocation}</div>
-                        </div>
-                        ${job.service.dropoffLocation ? `
-                        <div class="detail-item">
-                            <div class="detail-label">Drop-off Location</div>
-                            <div class="detail-value">${job.service.dropoffLocation}</div>
+                            <div class="detail-label">🏠 Workshop Location</div>
+                            <div class="detail-value">${job.service.workshopLocation}</div>
                         </div>
                         ` : ''}
+                        <div class="detail-item">
+                            <div class="detail-label">📍 Pickup Location</div>
+                            <div class="detail-value">${job.service.pickupLocation}</div>
+                        </div>
                     </div>
+                    
+                    ${job.service.additionalStops && job.service.additionalStops.length > 0 ? `
+                    <div style="margin-top: 15px;">
+                        <div class="detail-label" style="margin-bottom: 10px;">🚗 Additional Stops</div>
+                        ${job.service.additionalStops.map((stop, index) => `
+                            <div class="detail-value" style="margin-bottom: 5px; padding-left: 15px;">
+                                Stop ${index + 1}: ${stop}
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                    
+                    ${job.service.dropoffLocation ? `
+                    <div class="modal-grid" style="margin-top: 15px;">
+                        <div class="detail-item">
+                            <div class="detail-label">🎯 Final Drop-off Location</div>
+                            <div class="detail-value">${job.service.dropoffLocation}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${job.service.routeSegments && job.service.routeSegments.length > 0 ? `
+                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <div class="detail-label" style="margin-bottom: 10px; font-weight: 700;">📊 Route Breakdown</div>
+                        ${job.service.routeSegments.map(segment => `
+                            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e0e0e0;">
+                                <span>${segment.label}</span>
+                                <span style="font-weight: 600; color: #667eea;">${segment.distance}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : ''}
                 </div>
 
                 ${job.notes.driver || job.notes.damage ? `
