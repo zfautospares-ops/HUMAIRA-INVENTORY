@@ -248,6 +248,13 @@ function calculateAllDistances() {
 
 // Calculate distances using Google Maps Distance Matrix API (accurate road distances)
 function calculateWithGoogleMaps(route) {
+    // Check if Distance Matrix service is available
+    if (typeof google === 'undefined' || !google.maps || !google.maps.DistanceMatrixService) {
+        console.log('Distance Matrix API not available, using Haversine fallback');
+        calculateWithHaversine(route);
+        return;
+    }
+    
     const service = new google.maps.DistanceMatrixService();
     const routeSegments = document.getElementById('routeSegments');
     const distanceBreakdown = document.getElementById('distanceBreakdown');
@@ -259,6 +266,7 @@ function calculateWithGoogleMaps(route) {
     let segmentsCalculated = 0;
     const totalSegments = route.length - 1;
     const segments = [];
+    let hasError = false;
     
     // Calculate each segment
     for (let i = 0; i < route.length - 1; i++) {
@@ -287,29 +295,40 @@ function calculateWithGoogleMaps(route) {
                 
                 totalDistance += distanceInKm;
             } else {
+                console.log(`Distance Matrix failed for segment ${i}, using Haversine fallback`);
                 // Fallback to Haversine for this segment
                 const distance = calculateDistanceBetween(from.coords, to.coords);
                 segments[i] = {
                     from: from.name,
                     to: to.name,
                     distance: distance,
-                    index: i
+                    index: i,
+                    approximate: true
                 };
                 totalDistance += distance;
+                hasError = true;
             }
             
             segmentsCalculated++;
             
             // When all segments are calculated, display them
             if (segmentsCalculated === totalSegments) {
-                displayDistanceSegments(segments, totalDistance);
+                displayDistanceSegments(segments, totalDistance, hasError);
             }
         });
     }
+    
+    // Timeout fallback - if Distance Matrix takes too long, use Haversine
+    setTimeout(() => {
+        if (segmentsCalculated < totalSegments) {
+            console.log('Distance Matrix timeout, using Haversine fallback');
+            calculateWithHaversine(route);
+        }
+    }, 5000);
 }
 
 // Display distance segments in order
-function displayDistanceSegments(segments, totalDistance) {
+function displayDistanceSegments(segments, totalDistance, hasApproximate) {
     const routeSegments = document.getElementById('routeSegments');
     const distanceBreakdown = document.getElementById('distanceBreakdown');
     
@@ -323,10 +342,18 @@ function displayDistanceSegments(segments, totalDistance) {
         segmentDiv.className = 'distance-item';
         segmentDiv.innerHTML = `
             <span class="distance-label">${index === 0 ? '🏠' : '🚗'} ${segment.from} → ${segment.to}:</span>
-            <span class="distance-value">${segment.distance.toFixed(2)} km</span>
+            <span class="distance-value">${segment.distance.toFixed(2)} km${segment.approximate ? ' (approx)' : ''}</span>
         `;
         routeSegments.appendChild(segmentDiv);
     });
+    
+    // Add note if using approximate distances
+    if (hasApproximate) {
+        const noteDiv = document.createElement('div');
+        noteDiv.style.cssText = 'padding: 8px; background: #fff3e0; border-radius: 4px; margin-top: 10px; font-size: 12px; color: #f57c00;';
+        noteDiv.innerHTML = 'ℹ️ Some distances are approximate (straight-line). Enable Distance Matrix API for accurate road distances.';
+        routeSegments.appendChild(noteDiv);
+    }
     
     // Update total
     document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
