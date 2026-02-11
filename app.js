@@ -1,62 +1,3 @@
-// Vehicle Damage Diagram
-let selectedVehicleType = 'car';
-let damageMarks = {
-    car: [],
-    truck: []
-};
-
-// Select vehicle type
-function selectVehicleType(type) {
-    selectedVehicleType = type;
-    
-    // Update button states
-    document.querySelectorAll('.vehicle-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    // Show/hide diagrams
-    document.getElementById('carDiagram').classList.remove('active');
-    document.getElementById('truckDiagram').classList.remove('active');
-    document.getElementById(type + 'Diagram').classList.add('active');
-}
-
-// Toggle damage on area
-function toggleDamage(event, vehicleType, area) {
-    event.stopPropagation();
-    const element = event.target;
-    
-    // Toggle damaged class
-    element.classList.toggle('damaged');
-    
-    // Update damage marks array
-    const index = damageMarks[vehicleType].indexOf(area);
-    if (index > -1) {
-        damageMarks[vehicleType].splice(index, 1);
-    } else {
-        damageMarks[vehicleType].push(area);
-    }
-    
-    console.log('Damage marks:', damageMarks);
-}
-
-// Get damage summary
-function getDamageSummary() {
-    const damages = damageMarks[selectedVehicleType];
-    if (damages.length === 0) {
-        return '';
-    }
-    
-    const vehicleLabel = selectedVehicleType === 'car' ? 'Car' : 'Truck';
-    const areaLabels = damages.map(area => {
-        return area.split('-').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-    });
-    
-    return `${vehicleLabel} - Damaged areas: ${areaLabels.join(', ')}`;
-}
-
 // Generate unique job ID
 function generateJobId() {
     const timestamp = Date.now();
@@ -199,6 +140,7 @@ function initAutocomplete() {
 window.initAutocomplete = initAutocomplete;
 
 // Geolocation
+let workshopCoords = null;
 let pickupCoords = null;
 let dropoffCoords = null;
 
@@ -218,7 +160,10 @@ function getLocation(type) {
             const lon = position.coords.longitude;
             const locationString = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
             
-            if (type === 'pickup') {
+            if (type === 'workshop') {
+                document.getElementById('workshopLocation').value = locationString;
+                workshopCoords = { lat, lon };
+            } else if (type === 'pickup') {
                 document.getElementById('pickupLocation').value = locationString;
                 pickupCoords = { lat, lon };
             } else {
@@ -226,51 +171,101 @@ function getLocation(type) {
                 dropoffCoords = { lat, lon };
             }
             
-            // Calculate distance if both locations are set
-            calculateDistance();
+            // Calculate distance if locations are set
+            calculateAllDistances();
             
-            button.textContent = '📍 Use Current Location';
+            button.textContent = '📍 Use Current GPS';
             button.disabled = false;
         },
         (error) => {
             alert('Unable to get location: ' + error.message);
-            button.textContent = '📍 Use Current Location';
+            button.textContent = '📍 Use Current GPS';
             button.disabled = false;
         }
     );
 }
 
-// Calculate distance between two coordinates using Haversine formula
-function calculateDistance() {
-    if (!pickupCoords || !dropoffCoords) {
-        return;
+// Calculate all distances for the complete route
+function calculateAllDistances() {
+    let totalDistance = 0;
+    
+    // Workshop to Pickup
+    if (workshopCoords && pickupCoords) {
+        const dist1 = calculateDistanceBetween(workshopCoords, pickupCoords);
+        document.getElementById('distanceWorkshopToPickup').textContent = dist1.toFixed(2) + ' km';
+        totalDistance += dist1;
+    } else {
+        document.getElementById('distanceWorkshopToPickup').textContent = '0 km';
     }
     
+    // Pickup to Drop-off
+    if (pickupCoords && dropoffCoords) {
+        const dist2 = calculateDistanceBetween(pickupCoords, dropoffCoords);
+        document.getElementById('distancePickupToDropoff').textContent = dist2.toFixed(2) + ' km';
+        totalDistance += dist2;
+    } else {
+        document.getElementById('distancePickupToDropoff').textContent = '0 km';
+    }
+    
+    // Drop-off to Workshop
+    if (dropoffCoords && workshopCoords) {
+        const dist3 = calculateDistanceBetween(dropoffCoords, workshopCoords);
+        document.getElementById('distanceDropoffToWorkshop').textContent = dist3.toFixed(2) + ' km';
+        totalDistance += dist3;
+    } else {
+        document.getElementById('distanceDropoffToWorkshop').textContent = '0 km';
+    }
+    
+    // Update total
+    document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
+    document.getElementById('mileage').value = totalDistance.toFixed(2);
+}
+
+// Calculate distance between two coordinates using Haversine formula
+function calculateDistanceBetween(coords1, coords2) {
     const R = 6371; // Earth's radius in kilometers
-    const dLat = toRad(dropoffCoords.lat - pickupCoords.lat);
-    const dLon = toRad(dropoffCoords.lon - pickupCoords.lon);
+    const dLat = toRad(coords2.lat - coords1.lat);
+    const dLon = toRad(coords2.lon - coords1.lon);
     
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(toRad(pickupCoords.lat)) * Math.cos(toRad(dropoffCoords.lat)) *
+              Math.cos(toRad(coords1.lat)) * Math.cos(toRad(coords2.lat)) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
     
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
     
-    // Update mileage field
-    document.getElementById('mileage').value = distance.toFixed(2);
+    return distance;
 }
 
 function toRad(degrees) {
     return degrees * (Math.PI / 180);
 }
 
-// Also allow manual location entry to trigger distance calculation
+// Parse workshop location on page load
+window.addEventListener('load', function() {
+    const workshopInput = document.getElementById('workshopLocation');
+    if (workshopInput && workshopInput.value) {
+        const coords = parseCoordinates(workshopInput.value);
+        if (coords) {
+            workshopCoords = coords;
+        }
+    }
+});
+
+// Allow manual location entry to trigger distance calculation
+document.getElementById('workshopLocation').addEventListener('change', function() {
+    const coords = parseCoordinates(this.value);
+    if (coords) {
+        workshopCoords = coords;
+        calculateAllDistances();
+    }
+});
+
 document.getElementById('pickupLocation').addEventListener('change', function() {
     const coords = parseCoordinates(this.value);
     if (coords) {
         pickupCoords = coords;
-        calculateDistance();
+        calculateAllDistances();
     }
 });
 
@@ -278,7 +273,7 @@ document.getElementById('dropoffLocation').addEventListener('change', function()
     const coords = parseCoordinates(this.value);
     if (coords) {
         dropoffCoords = coords;
-        calculateDistance();
+        calculateAllDistances();
     }
 });
 
@@ -333,13 +328,6 @@ document.getElementById('jobCardForm').addEventListener('submit', function(e) {
 });
 
 function collectFormData() {
-    // Get damage summary
-    const damageSummary = getDamageSummary();
-    const damageNotes = document.getElementById('damageNotes').value;
-    const combinedDamageNotes = damageSummary 
-        ? (damageNotes ? `${damageSummary}\n\n${damageNotes}` : damageSummary)
-        : damageNotes;
-    
     const formData = {
         jobId: currentJobId,
         timestamp: new Date().toISOString(),
@@ -358,17 +346,20 @@ function collectFormData() {
         },
         service: {
             type: document.getElementById('serviceType').value,
+            workshopLocation: document.getElementById('workshopLocation').value,
             pickupLocation: document.getElementById('pickupLocation').value,
             dropoffLocation: document.getElementById('dropoffLocation').value,
-            mileage: document.getElementById('mileage').value
+            mileage: document.getElementById('mileage').value,
+            distanceBreakdown: {
+                workshopToPickup: document.getElementById('distanceWorkshopToPickup').textContent.replace(' km', ''),
+                pickupToDropoff: document.getElementById('distancePickupToDropoff').textContent.replace(' km', ''),
+                dropoffToWorkshop: document.getElementById('distanceDropoffToWorkshop').textContent.replace(' km', ''),
+                total: document.getElementById('totalDistance').textContent.replace(' km', '')
+            }
         },
         notes: {
             driver: document.getElementById('driverNotes').value,
-            damage: combinedDamageNotes
-        },
-        damageMarks: {
-            vehicleType: selectedVehicleType,
-            areas: damageMarks[selectedVehicleType]
+            damage: document.getElementById('damageNotes').value
         },
         signature: hasSignature ? canvas.toDataURL() : null,
         photos: []

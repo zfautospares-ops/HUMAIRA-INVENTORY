@@ -111,6 +111,17 @@
                         <option value="other">📋 Other</option>
                     </select>
                 </div>
+                
+                <!-- Workshop Start Point -->
+                <div class="form-group">
+                    <label for="workshopLocation">Workshop/Home Base *</label>
+                    <input type="text" id="workshopLocation" value="784 Gopalall Hurbans, Tongaat, KZN" required>
+                    <button type="button" class="btn-secondary" onclick="getLocation('workshop')">📍 Use Current GPS</button>
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        🏠 Starting point for the job (default: company address)
+                    </small>
+                </div>
+                
                 <div class="form-group">
                     <label for="pickupLocation">Pickup Location *</label>
                     <input type="text" id="pickupLocation" placeholder="Start typing address..." required>
@@ -121,11 +132,32 @@
                     <input type="text" id="dropoffLocation" placeholder="Start typing address...">
                     <button type="button" class="btn-secondary" onclick="getLocation('dropoff')">📍 Use Current GPS</button>
                 </div>
+                
+                <!-- Distance Breakdown -->
+                <div class="distance-breakdown">
+                    <div class="distance-item">
+                        <span class="distance-label">🏠 Workshop → Pickup:</span>
+                        <span class="distance-value" id="distanceWorkshopToPickup">0 km</span>
+                    </div>
+                    <div class="distance-item">
+                        <span class="distance-label">🚗 Pickup → Drop-off:</span>
+                        <span class="distance-value" id="distancePickupToDropoff">0 km</span>
+                    </div>
+                    <div class="distance-item">
+                        <span class="distance-label">🏠 Drop-off → Workshop:</span>
+                        <span class="distance-value" id="distanceDropoffToWorkshop">0 km</span>
+                    </div>
+                    <div class="distance-item total">
+                        <span class="distance-label">📊 Total Distance:</span>
+                        <span class="distance-value" id="totalDistance">0 km</span>
+                    </div>
+                </div>
+                
                 <div class="form-group">
-                    <label for="mileage">Distance (km)</label>
+                    <label for="mileage">Total Distance (km)</label>
                     <input type="number" id="mileage" step="0.1" readonly style="background: #f0f0f0;">
                     <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
-                        ℹ️ Auto-calculated when using GPS locations
+                        ℹ️ Auto-calculated: Workshop → Pickup → Drop-off → Workshop
                     </small>
                 </div>
             </section>
@@ -148,244 +180,13 @@
                     <textarea id="driverNotes" rows="4"></textarea>
                 </div>
                 
-                <!-- Vehicle Damage Diagram -->
+                <!-- Vehicle Damage Notes -->
                 <div class="form-group">
-                    <label>Pre-existing Damage - Mark on Diagram</label>
-                    <div class="vehicle-type-selector">
-                        <button type="button" class="vehicle-btn active" onclick="selectVehicleType('car')">🚗 Car</button>
-                        <button type="button" class="vehicle-btn" onclick="selectVehicleType('truck')">🚛 Truck</button>
-                    </div>
-                    
-                    <!-- Car Diagram -->
-                    <div id="carDiagram" class="damage-diagram active">
-                        <div class="diagram-title">Car - Top View</div>
-                        <svg viewBox="0 0 600 800" class="vehicle-svg">
-                            <!-- Car outline -->
-                            <path d="M 200 100 Q 180 120 180 150 L 180 650 Q 180 680 200 700 L 400 700 Q 420 680 420 650 L 420 150 Q 420 120 400 100 Z" 
-                                  fill="#f5f5f5" stroke="#333" stroke-width="3"/>
-                            
-                            <!-- Windshield -->
-                            <rect x="220" y="180" width="160" height="80" rx="5" fill="#b3d9ff" stroke="#333" stroke-width="2"/>
-                            
-                            <!-- Front Hood -->
-                            <path d="M 200 100 Q 180 120 180 150 L 420 150 Q 420 120 400 100 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-hood" onclick="toggleDamage(event, 'car', 'front-hood')"/>
-                            <text x="300" y="130" text-anchor="middle" font-size="12" fill="#666">Hood</text>
-                            
-                            <!-- Roof -->
-                            <rect x="220" y="260" width="160" height="180" rx="5" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="roof" onclick="toggleDamage(event, 'car', 'roof')"/>
-                            <text x="300" y="355" text-anchor="middle" font-size="12" fill="#666">Roof</text>
-                            
-                            <!-- Trunk -->
-                            <path d="M 180 650 Q 180 680 200 700 L 400 700 Q 420 680 420 650 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="trunk" onclick="toggleDamage(event, 'car', 'trunk')"/>
-                            <text x="300" y="680" text-anchor="middle" font-size="12" fill="#666">Trunk</text>
-                            
-                            <!-- Front Left Fender -->
-                            <path d="M 180 150 L 180 240 L 220 240 L 220 180 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-left-fender" onclick="toggleDamage(event, 'car', 'front-left-fender')"/>
-                            <text x="190" y="200" font-size="10" fill="#666" transform="rotate(-90 190 200)">L Fender</text>
-                            
-                            <!-- Front Right Fender -->
-                            <path d="M 420 150 L 420 240 L 380 240 L 380 180 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-right-fender" onclick="toggleDamage(event, 'car', 'front-right-fender')"/>
-                            <text x="410" y="200" font-size="10" fill="#666" transform="rotate(90 410 200)">R Fender</text>
-                            
-                            <!-- Front Left Door -->
-                            <rect x="180" y="260" width="40" height="90" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-left-door" onclick="toggleDamage(event, 'car', 'front-left-door')"/>
-                            <text x="190" y="310" font-size="10" fill="#666" transform="rotate(-90 190 310)">FL Door</text>
-                            
-                            <!-- Front Right Door -->
-                            <rect x="380" y="260" width="40" height="90" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-right-door" onclick="toggleDamage(event, 'car', 'front-right-door')"/>
-                            <text x="410" y="310" font-size="10" fill="#666" transform="rotate(90 410 310)">FR Door</text>
-                            
-                            <!-- Rear Left Door -->
-                            <rect x="180" y="360" width="40" height="90" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="rear-left-door" onclick="toggleDamage(event, 'car', 'rear-left-door')"/>
-                            <text x="190" y="410" font-size="10" fill="#666" transform="rotate(-90 190 410)">RL Door</text>
-                            
-                            <!-- Rear Right Door -->
-                            <rect x="380" y="360" width="40" height="90" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="rear-right-door" onclick="toggleDamage(event, 'car', 'rear-right-door')"/>
-                            <text x="410" y="410" font-size="10" fill="#666" transform="rotate(90 410 410)">RR Door</text>
-                            
-                            <!-- Rear Left Quarter Panel -->
-                            <path d="M 180 460 L 180 650 L 220 650 L 220 460 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="rear-left-quarter" onclick="toggleDamage(event, 'car', 'rear-left-quarter')"/>
-                            <text x="190" y="560" font-size="10" fill="#666" transform="rotate(-90 190 560)">L Quarter</text>
-                            
-                            <!-- Rear Right Quarter Panel -->
-                            <path d="M 420 460 L 420 650 L 380 650 L 380 460 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="rear-right-quarter" onclick="toggleDamage(event, 'car', 'rear-right-quarter')"/>
-                            <text x="410" y="560" font-size="10" fill="#666" transform="rotate(90 410 560)">R Quarter</text>
-                            
-                            <!-- Front Bumper -->
-                            <rect x="220" y="80" width="160" height="20" rx="10" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-bumper" onclick="toggleDamage(event, 'car', 'front-bumper')"/>
-                            <text x="300" y="93" text-anchor="middle" font-size="10" fill="#666">F Bumper</text>
-                            
-                            <!-- Rear Bumper -->
-                            <rect x="220" y="700" width="160" height="20" rx="10" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="rear-bumper" onclick="toggleDamage(event, 'car', 'rear-bumper')"/>
-                            <text x="300" y="713" text-anchor="middle" font-size="10" fill="#666">R Bumper</text>
-                            
-                            <!-- Mirrors -->
-                            <circle cx="170" y="270" r="12" fill="#333" stroke="#333" stroke-width="2" 
-                                    class="damage-area" data-area="left-mirror" onclick="toggleDamage(event, 'car', 'left-mirror')"/>
-                            <circle cx="430" y="270" r="12" fill="#333" stroke="#333" stroke-width="2" 
-                                    class="damage-area" data-area="right-mirror" onclick="toggleDamage(event, 'car', 'right-mirror')"/>
-                            
-                            <!-- Wheels -->
-                            <ellipse cx="200" y="220" rx="25" ry="30" fill="#333" 
-                                     class="damage-area" data-area="front-left-wheel" onclick="toggleDamage(event, 'car', 'front-left-wheel')"/>
-                            <ellipse cx="400" y="220" rx="25" ry="30" fill="#333" 
-                                     class="damage-area" data-area="front-right-wheel" onclick="toggleDamage(event, 'car', 'front-right-wheel')"/>
-                            <ellipse cx="200" y="580" rx="25" ry="30" fill="#333" 
-                                     class="damage-area" data-area="rear-left-wheel" onclick="toggleDamage(event, 'car', 'rear-left-wheel')"/>
-                            <ellipse cx="400" y="580" rx="25" ry="30" fill="#333" 
-                                     class="damage-area" data-area="rear-right-wheel" onclick="toggleDamage(event, 'car', 'rear-right-wheel')"/>
-                            
-                            <!-- Labels -->
-                            <text x="300" y="40" text-anchor="middle" font-size="16" font-weight="bold" fill="#667eea">Tap areas to mark damage</text>
-                            <text x="300" y="60" text-anchor="middle" font-size="12" fill="#666">Front ↑</text>
-                            <text x="300" y="770" text-anchor="middle" font-size="12" fill="#666">↓ Rear</text>
-                        </svg>
-                    </div>
-                    
-                    <!-- Truck Diagram -->
-                    <div id="truckDiagram" class="damage-diagram">
-                        <div class="diagram-title">Truck - Top View</div>
-                        <svg viewBox="0 0 700 900" class="vehicle-svg">
-                            <!-- Truck outline -->
-                            <!-- Cab -->
-                            <path d="M 250 100 Q 230 120 230 150 L 230 350 L 470 350 L 470 150 Q 470 120 450 100 Z" 
-                                  fill="#f5f5f5" stroke="#333" stroke-width="3"/>
-                            <!-- Cargo bed -->
-                            <rect x="230" y="350" width="240" height="450" rx="10" 
-                                  fill="#f5f5f5" stroke="#333" stroke-width="3"/>
-                            
-                            <!-- Windshield -->
-                            <rect x="270" y="180" width="160" height="60" rx="5" fill="#b3d9ff" stroke="#333" stroke-width="2"/>
-                            
-                            <!-- Cab Hood -->
-                            <path d="M 250 100 Q 230 120 230 150 L 470 150 Q 470 120 450 100 Z" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cab-hood" onclick="toggleDamage(event, 'truck', 'cab-hood')"/>
-                            <text x="350" y="130" text-anchor="middle" font-size="12" fill="#666">Hood</text>
-                            
-                            <!-- Cab Roof -->
-                            <rect x="270" y="240" width="160" height="110" rx="5" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cab-roof" onclick="toggleDamage(event, 'truck', 'cab-roof')"/>
-                            <text x="350" y="300" text-anchor="middle" font-size="12" fill="#666">Cab Roof</text>
-                            
-                            <!-- Cab Left Door -->
-                            <rect x="230" y="240" width="40" height="110" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cab-left-door" onclick="toggleDamage(event, 'truck', 'cab-left-door')"/>
-                            <text x="240" y="300" font-size="10" fill="#666" transform="rotate(-90 240 300)">L Door</text>
-                            
-                            <!-- Cab Right Door -->
-                            <rect x="430" y="240" width="40" height="110" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cab-right-door" onclick="toggleDamage(event, 'truck', 'cab-right-door')"/>
-                            <text x="460" y="300" font-size="10" fill="#666" transform="rotate(90 460 300)">R Door</text>
-                            
-                            <!-- Cargo Bed Front -->
-                            <rect x="270" y="350" width="160" height="100" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cargo-front" onclick="toggleDamage(event, 'truck', 'cargo-front')"/>
-                            <text x="350" y="405" text-anchor="middle" font-size="12" fill="#666">Cargo Front</text>
-                            
-                            <!-- Cargo Bed Left Side -->
-                            <rect x="230" y="450" width="40" height="250" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cargo-left" onclick="toggleDamage(event, 'truck', 'cargo-left')"/>
-                            <text x="240" y="580" font-size="10" fill="#666" transform="rotate(-90 240 580)">Left Side</text>
-                            
-                            <!-- Cargo Bed Right Side -->
-                            <rect x="430" y="450" width="40" height="250" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cargo-right" onclick="toggleDamage(event, 'truck', 'cargo-right')"/>
-                            <text x="460" y="580" font-size="10" fill="#666" transform="rotate(90 460 580)">Right Side</text>
-                            
-                            <!-- Cargo Bed Center -->
-                            <rect x="270" y="450" width="160" height="250" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cargo-bed" onclick="toggleDamage(event, 'truck', 'cargo-bed')"/>
-                            <text x="350" y="580" text-anchor="middle" font-size="12" fill="#666">Cargo Bed</text>
-                            
-                            <!-- Cargo Bed Rear -->
-                            <rect x="270" y="700" width="160" height="100" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="cargo-rear" onclick="toggleDamage(event, 'truck', 'cargo-rear')"/>
-                            <text x="350" y="755" text-anchor="middle" font-size="12" fill="#666">Tailgate</text>
-                            
-                            <!-- Front Bumper -->
-                            <rect x="270" y="75" width="160" height="25" rx="10" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="front-bumper" onclick="toggleDamage(event, 'truck', 'front-bumper')"/>
-                            <text x="350" y="92" text-anchor="middle" font-size="10" fill="#666">F Bumper</text>
-                            
-                            <!-- Rear Bumper -->
-                            <rect x="270" y="800" width="160" height="25" rx="10" 
-                                  fill="#e0e0e0" stroke="#333" stroke-width="2" 
-                                  class="damage-area" data-area="rear-bumper" onclick="toggleDamage(event, 'truck', 'rear-bumper')"/>
-                            <text x="350" y="817" text-anchor="middle" font-size="10" fill="#666">R Bumper</text>
-                            
-                            <!-- Mirrors -->
-                            <circle cx="215" y="260" r="15" fill="#333" stroke="#333" stroke-width="2" 
-                                    class="damage-area" data-area="left-mirror" onclick="toggleDamage(event, 'truck', 'left-mirror')"/>
-                            <circle cx="485" y="260" r="15" fill="#333" stroke="#333" stroke-width="2" 
-                                    class="damage-area" data-area="right-mirror" onclick="toggleDamage(event, 'truck', 'right-mirror')"/>
-                            
-                            <!-- Wheels -->
-                            <ellipse cx="250" y="200" rx="30" ry="35" fill="#333" 
-                                     class="damage-area" data-area="front-left-wheel" onclick="toggleDamage(event, 'truck', 'front-left-wheel')"/>
-                            <ellipse cx="450" y="200" rx="30" ry="35" fill="#333" 
-                                     class="damage-area" data-area="front-right-wheel" onclick="toggleDamage(event, 'truck', 'front-right-wheel')"/>
-                            <ellipse cx="250" y="650" rx="30" ry="35" fill="#333" 
-                                     class="damage-area" data-area="rear-left-wheel-1" onclick="toggleDamage(event, 'truck', 'rear-left-wheel-1')"/>
-                            <ellipse cx="450" y="650" rx="30" ry="35" fill="#333" 
-                                     class="damage-area" data-area="rear-right-wheel-1" onclick="toggleDamage(event, 'truck', 'rear-right-wheel-1')"/>
-                            <ellipse cx="250" y="720" rx="30" ry="35" fill="#333" 
-                                     class="damage-area" data-area="rear-left-wheel-2" onclick="toggleDamage(event, 'truck', 'rear-left-wheel-2')"/>
-                            <ellipse cx="450" y="720" rx="30" ry="35" fill="#333" 
-                                     class="damage-area" data-area="rear-right-wheel-2" onclick="toggleDamage(event, 'truck', 'rear-right-wheel-2')"/>
-                            
-                            <!-- Labels -->
-                            <text x="350" y="40" text-anchor="middle" font-size="16" font-weight="bold" fill="#667eea">Tap areas to mark damage</text>
-                            <text x="350" y="60" text-anchor="middle" font-size="12" fill="#666">Front ↑</text>
-                            <text x="350" y="870" text-anchor="middle" font-size="12" fill="#666">↓ Rear</text>
-                        </svg>
-                    </div>
-                    
-                    <div class="damage-legend">
-                        <span class="legend-item"><span class="legend-color normal"></span> Normal</span>
-                        <span class="legend-item"><span class="legend-color damaged"></span> Damaged</span>
-                        <span class="legend-item"><span class="legend-color wheel"></span> Wheels/Mirrors</span>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="damageNotes">Additional Damage Notes</label>
-                    <textarea id="damageNotes" rows="3" placeholder="Describe any damage in detail..."></textarea>
+                    <label for="damageNotes">Pre-existing Damage Description</label>
+                    <textarea id="damageNotes" rows="6" placeholder="Describe any pre-existing damage to the vehicle in detail (e.g., scratches, dents, broken parts, wheel damage, etc.)..."></textarea>
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        ℹ️ Please be as detailed as possible - include location, severity, and type of damage
+                    </small>
                 </div>
             </section>
 
