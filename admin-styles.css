@@ -385,3 +385,146 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Backup Management Styles */
+.btn-backup {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #4caf50;
+    color: white;
+    transition: all 0.3s;
+}
+
+.btn-backup:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+}
+
+.backup-actions {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.btn-create-backup {
+    padding: 14px 32px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transition: all 0.3s;
+    margin-bottom: 15px;
+}
+
+.btn-create-backup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+}
+
+.backup-info {
+    color: #666;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.backup-list-container h3 {
+    color: #1e3c72;
+    font-size: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.backup-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e8e8e8;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+}
+
+.backup-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+}
+
+.backup-info {
+    flex: 1;
+}
+
+.backup-filename {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.backup-meta {
+    display: flex;
+    gap: 15px;
+    color: #999;
+    font-size: 12px;
+}
+
+.backup-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-download,
+.btn-restore {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-download {
+    background: #2196f3;
+    color: white;
+}
+
+.btn-download:hover {
+    background: #1976d2;
+    transform: scale(1.1);
+}
+
+.btn-restore {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-restore:hover {
+    background: #f57c00;
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .backup-item {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .backup-meta {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .backup-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

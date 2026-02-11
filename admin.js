@@ -303,7 +303,114 @@ function truncate(str, length) {
 // Close modal when clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById('jobModal');
+    const backupModal = document.getElementById('backupModal');
     if (event.target === modal) {
         closeModal();
     }
+    if (event.target === backupModal) {
+        closeBackupModal();
+    }
+}
+
+// Backup Management Functions
+
+function openBackupModal() {
+    document.getElementById('backupModal').style.display = 'block';
+    loadBackups();
+}
+
+function closeBackupModal() {
+    document.getElementById('backupModal').style.display = 'none';
+}
+
+function loadBackups() {
+    fetch('https://mh-towing-job-cards.onrender.com/api/backups')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.backups.length > 0) {
+                displayBackups(data.backups);
+            } else {
+                document.getElementById('backupList').innerHTML = '<div class="loading">No backups found.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading backups:', error);
+            document.getElementById('backupList').innerHTML = '<div class="loading">❌ Error loading backups.</div>';
+        });
+}
+
+function displayBackups(backups) {
+    const container = document.getElementById('backupList');
+    container.innerHTML = backups.map(backup => `
+        <div class="backup-item">
+            <div class="backup-info">
+                <div class="backup-filename">📄 ${backup.filename}</div>
+                <div class="backup-meta">
+                    <span>📅 ${formatDate(backup.created)}</span>
+                    <span>💾 ${formatFileSize(backup.size)}</span>
+                </div>
+            </div>
+            <div class="backup-actions">
+                <button onclick="downloadBackup('${backup.filename}')" class="btn-download" title="Download">⬇️</button>
+                <button onclick="restoreBackup('${backup.filename}')" class="btn-restore" title="Restore">♻️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function createManualBackup() {
+    if (!confirm('Create a manual backup now?')) {
+        return;
+    }
+
+    fetch('https://mh-towing-job-cards.onrender.com/api/backups/create', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Backup created successfully!');
+            loadBackups();
+        } else {
+            alert('❌ Failed to create backup: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error creating backup:', error);
+        alert('❌ Error creating backup');
+    });
+}
+
+function restoreBackup(filename) {
+    if (!confirm(`⚠️ WARNING: This will restore data from backup "${filename}".\n\nYour current data will be backed up first, but this action cannot be undone.\n\nAre you sure you want to continue?`)) {
+        return;
+    }
+
+    fetch(`https://mh-towing-job-cards.onrender.com/api/backups/restore/${filename}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Data restored successfully! Refreshing dashboard...');
+            closeBackupModal();
+            refreshData();
+        } else {
+            alert('❌ Failed to restore backup: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error restoring backup:', error);
+        alert('❌ Error restoring backup');
+    });
+}
+
+function downloadBackup(filename) {
+    window.location.href = `https://mh-towing-job-cards.onrender.com/api/backups/download/${filename}`;
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }

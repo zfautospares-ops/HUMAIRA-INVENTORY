@@ -21,6 +21,7 @@
             </div>
             <div class="header-actions">
                 <button onclick="refreshData()" class="btn-refresh">🔄 Refresh</button>
+                <button onclick="openBackupModal()" class="btn-backup">💾 Backups</button>
                 <a href="calculator.html" class="btn-new">🧮 Calculator</a>
                 <a href="index.html" class="btn-new">➕ New Job Card</a>
             </div>
@@ -67,6 +68,24 @@
             <div class="modal-content">
                 <span class="close" onclick="closeModal()">&times;</span>
                 <div id="modalBody"></div>
+            </div>
+        </div>
+
+        <!-- Modal for backup management -->
+        <div id="backupModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeBackupModal()">&times;</span>
+                <div id="backupModalBody">
+                    <h2>💾 Backup Management</h2>
+                    <div class="backup-actions">
+                        <button onclick="createManualBackup()" class="btn-create-backup">➕ Create Backup Now</button>
+                        <p class="backup-info">Automatic backups run every 24 hours and after each data change</p>
+                    </div>
+                    <div class="backup-list-container">
+                        <h3>Available Backups</h3>
+                        <div id="backupList" class="loading">Loading backups...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
