@@ -218,7 +218,15 @@ function calculateAllDistances() {
     });
     
     if (dropoffCoords) route.push({ name: 'Drop-off', coords: dropoffCoords });
-    if (workshopCoords && route.length > 1) route.push({ name: 'Workshop', coords: workshopCoords });
+    
+    // Check if user wants to include return trip
+    const includeReturn = document.getElementById('includeReturnTrip');
+    const shouldIncludeReturn = includeReturn ? includeReturn.checked : true;
+    
+    // Add return to workshop only if checkbox is checked and we have at least 2 points
+    if (workshopCoords && route.length > 1 && shouldIncludeReturn) {
+        route.push({ name: 'Workshop (Return)', coords: workshopCoords });
+    }
     
     // Calculate distances between consecutive points
     for (let i = 0; i < route.length - 1; i++) {

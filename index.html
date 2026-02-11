@@ -151,6 +151,12 @@
                 
                 <!-- Distance Breakdown -->
                 <div class="distance-breakdown" id="distanceBreakdown" style="display: none;">
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="checkbox" id="includeReturnTrip" checked onchange="calculateAllDistances()" style="width: auto;">
+                            <span style="font-size: 14px; color: #666;">Include return trip to workshop</span>
+                        </label>
+                    </div>
                     <div id="routeSegments"></div>
                     <div class="distance-item total">
                         <span class="distance-label">📊 Total Distance:</span>
