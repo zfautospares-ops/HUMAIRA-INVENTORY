@@ -133,6 +133,37 @@ app.delete('/api/jobcards/:jobId', (req, res) => {
     }
 });
 
+// Update job card
+app.put('/api/jobcards/:jobId', (req, res) => {
+    try {
+        const jobCards = readJobCards();
+        const index = jobCards.findIndex(j => j.jobId === req.params.jobId);
+        
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'Job card not found' });
+        }
+        
+        // Preserve original data and update with new data
+        jobCards[index] = {
+            ...jobCards[index],
+            customer: req.body.customer,
+            vehicle: req.body.vehicle,
+            service: {
+                ...jobCards[index].service,
+                ...req.body.service
+            },
+            notes: req.body.notes,
+            updated_at: new Date().toISOString()
+        };
+        
+        writeJobCards(jobCards);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating job card:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Update job card pricing
 app.put('/api/jobcards/:jobId/pricing', (req, res) => {
     try {

@@ -114,6 +114,7 @@ function displayJobCards(jobCards) {
             <div class="job-actions" onclick="event.stopPropagation()">
                 <button class="btn-view" onclick="viewJobDetails('${job.jobId}')">👁️ View</button>
                 <button class="btn-pricing" onclick="openPricingModal('${job.jobId}')">💰 Price</button>
+                <button class="btn-edit" onclick="openEditModal('${job.jobId}')">✏️ Edit</button>
                 <button class="btn-delete" onclick="deleteJob('${job.jobId}')">🗑️ Delete</button>
             </div>
         </div>
@@ -724,5 +725,179 @@ function savePricing(jobId) {
     .catch(error => {
         console.error('Error saving pricing:', error);
         alert('❌ Error saving pricing');
+    });
+}
+
+
+// Open edit modal
+function openEditModal(jobId) {
+    const job = allJobCards.find(j => j.jobId === jobId);
+    if (!job) return;
+    
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h2>✏️ Edit Job Card</h2>
+        <div class="edit-form">
+            <h3>Customer Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="edit_customerName" value="${job.customer.name}">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="edit_customerPhone" value="${job.customer.phone}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="edit_customerEmail" value="${job.customer.email || ''}">
+            </div>
+            
+            <h3>Vehicle Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Make</label>
+                    <input type="text" id="edit_vehicleMake" value="${job.vehicle.make}">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="edit_vehicleModel" value="${job.vehicle.model}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="number" id="edit_vehicleYear" value="${job.vehicle.year || ''}">
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <input type="text" id="edit_vehicleColor" value="${job.vehicle.color || ''}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>License Plate</label>
+                    <input type="text" id="edit_licensePlate" value="${job.vehicle.licensePlate}">
+                </div>
+                <div class="form-group">
+                    <label>VIN</label>
+                    <input type="text" id="edit_vin" value="${job.vehicle.vin || ''}">
+                </div>
+            </div>
+            
+            <h3>Service Details</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Service Type</label>
+                    <select id="edit_serviceType">
+                        <option value="tow" ${job.service.type === 'tow' ? 'selected' : ''}>🚗 Tow Service</option>
+                        <option value="jumpstart" ${job.service.type === 'jumpstart' ? 'selected' : ''}>⚡ Jump Start</option>
+                        <option value="tire-change" ${job.service.type === 'tire-change' ? 'selected' : ''}>🔧 Tire Change</option>
+                        <option value="lockout" ${job.service.type === 'lockout' ? 'selected' : ''}>🔑 Lockout Service</option>
+                        <option value="fuel-delivery" ${job.service.type === 'fuel-delivery' ? 'selected' : ''}>⛽ Fuel Delivery</option>
+                        <option value="winch-out" ${job.service.type === 'winch-out' ? 'selected' : ''}>🪝 Winch Out</option>
+                        <option value="flatbed" ${job.service.type === 'flatbed' ? 'selected' : ''}>🛻 Flatbed Tow</option>
+                        <option value="accident-recovery" ${job.service.type === 'accident-recovery' ? 'selected' : ''}>🚨 Accident Recovery</option>
+                        <option value="battery-replacement" ${job.service.type === 'battery-replacement' ? 'selected' : ''}>🔋 Battery Replacement</option>
+                        <option value="other" ${job.service.type === 'other' ? 'selected' : ''}>📋 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Total Distance (km)</label>
+                    <input type="number" id="edit_mileage" value="${job.service.totalDistance || job.service.mileage || ''}" step="0.01">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Workshop Location</label>
+                <input type="text" id="edit_workshopLocation" value="${job.service.workshopLocation || ''}">
+            </div>
+            <div class="form-group">
+                <label>Pickup Location</label>
+                <input type="text" id="edit_pickupLocation" value="${job.service.pickupLocation}">
+            </div>
+            <div class="form-group">
+                <label>Drop-off Location</label>
+                <input type="text" id="edit_dropoffLocation" value="${job.service.dropoffLocation || ''}">
+            </div>
+            
+            <h3>Notes</h3>
+            <div class="form-group">
+                <label>Driver Notes</label>
+                <textarea id="edit_driverNotes" rows="3">${job.notes.driver || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Pre-existing Damage</label>
+                <textarea id="edit_damageNotes" rows="3">${job.notes.damage || ''}</textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button onclick="saveJobEdit('${jobId}')" class="btn-save-pricing">💾 Save Changes</button>
+                <button onclick="closeModal()" class="btn-cancel">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('jobModal').style.display = 'block';
+}
+
+// Save edited job card
+function saveJobEdit(jobId) {
+    const updatedJob = {
+        customer: {
+            name: document.getElementById('edit_customerName').value,
+            phone: document.getElementById('edit_customerPhone').value,
+            email: document.getElementById('edit_customerEmail').value
+        },
+        vehicle: {
+            make: document.getElementById('edit_vehicleMake').value,
+            model: document.getElementById('edit_vehicleModel').value,
+            year: document.getElementById('edit_vehicleYear').value,
+            color: document.getElementById('edit_vehicleColor').value,
+            licensePlate: document.getElementById('edit_licensePlate').value,
+            vin: document.getElementById('edit_vin').value
+        },
+        service: {
+            type: document.getElementById('edit_serviceType').value,
+            workshopLocation: document.getElementById('edit_workshopLocation').value,
+            pickupLocation: document.getElementById('edit_pickupLocation').value,
+            dropoffLocation: document.getElementById('edit_dropoffLocation').value,
+            mileage: document.getElementById('edit_mileage').value,
+            totalDistance: document.getElementById('edit_mileage').value
+        },
+        notes: {
+            driver: document.getElementById('edit_driverNotes').value,
+            damage: document.getElementById('edit_damageNotes').value
+        }
+    };
+    
+    // Validate required fields
+    if (!updatedJob.customer.name || !updatedJob.customer.phone || 
+        !updatedJob.vehicle.make || !updatedJob.vehicle.model || 
+        !updatedJob.vehicle.licensePlate || !updatedJob.service.pickupLocation) {
+        alert('Please fill in all required fields (Name, Phone, Make, Model, License Plate, Pickup Location)');
+        return;
+    }
+    
+    fetch(`https://mh-towing-job-cards.onrender.com/api/jobcards/${jobId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedJob)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Job card updated successfully!');
+            closeModal();
+            refreshData();
+        } else {
+            alert('❌ Failed to update job card: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error updating job card:', error);
+        alert('❌ Error updating job card');
     });
 }

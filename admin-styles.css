@@ -255,7 +255,9 @@ body {
 }
 
 .btn-view,
-.btn-delete {
+.btn-delete,
+.btn-pricing,
+.btn-edit {
     padding: 8px 16px;
     border: none;
     border-radius: 6px;
@@ -272,6 +274,15 @@ body {
 
 .btn-view:hover {
     background: #5568d3;
+}
+
+.btn-edit {
+    background: #ff9800;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #f57c00;
 }
 
 .btn-delete {
@@ -1017,5 +1028,76 @@ body {
     .btn-save-pricing,
     .btn-cancel {
         width: 100%;
+    }
+}
+
+
+/* Edit Form Styles */
+.edit-form h3 {
+    color: #1e3c72;
+    font-size: 16px;
+    margin: 25px 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.edit-form h3:first-of-type {
+    margin-top: 0;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.edit-form .form-group {
+    margin-bottom: 15px;
+}
+
+.edit-form label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.edit-form input,
+.edit-form select,
+.edit-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+
+.edit-form input:focus,
+.edit-form select:focus,
+.edit-form textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.edit-form textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .job-actions {
+        flex-wrap: wrap;
+    }
+    
+    .job-actions button {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 80px;
     }
 }
