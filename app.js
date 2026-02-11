@@ -1,3 +1,62 @@
+// Vehicle Damage Diagram
+let selectedVehicleType = 'car';
+let damageMarks = {
+    car: [],
+    truck: []
+};
+
+// Select vehicle type
+function selectVehicleType(type) {
+    selectedVehicleType = type;
+    
+    // Update button states
+    document.querySelectorAll('.vehicle-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show/hide diagrams
+    document.getElementById('carDiagram').classList.remove('active');
+    document.getElementById('truckDiagram').classList.remove('active');
+    document.getElementById(type + 'Diagram').classList.add('active');
+}
+
+// Toggle damage on area
+function toggleDamage(event, vehicleType, area) {
+    event.stopPropagation();
+    const element = event.target;
+    
+    // Toggle damaged class
+    element.classList.toggle('damaged');
+    
+    // Update damage marks array
+    const index = damageMarks[vehicleType].indexOf(area);
+    if (index > -1) {
+        damageMarks[vehicleType].splice(index, 1);
+    } else {
+        damageMarks[vehicleType].push(area);
+    }
+    
+    console.log('Damage marks:', damageMarks);
+}
+
+// Get damage summary
+function getDamageSummary() {
+    const damages = damageMarks[selectedVehicleType];
+    if (damages.length === 0) {
+        return '';
+    }
+    
+    const vehicleLabel = selectedVehicleType === 'car' ? 'Car' : 'Truck';
+    const areaLabels = damages.map(area => {
+        return area.split('-').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+    });
+    
+    return `${vehicleLabel} - Damaged areas: ${areaLabels.join(', ')}`;
+}
+
 // Generate unique job ID
 function generateJobId() {
     const timestamp = Date.now();
@@ -274,6 +333,13 @@ document.getElementById('jobCardForm').addEventListener('submit', function(e) {
 });
 
 function collectFormData() {
+    // Get damage summary
+    const damageSummary = getDamageSummary();
+    const damageNotes = document.getElementById('damageNotes').value;
+    const combinedDamageNotes = damageSummary 
+        ? (damageNotes ? `${damageSummary}\n\n${damageNotes}` : damageSummary)
+        : damageNotes;
+    
     const formData = {
         jobId: currentJobId,
         timestamp: new Date().toISOString(),
@@ -298,7 +364,11 @@ function collectFormData() {
         },
         notes: {
             driver: document.getElementById('driverNotes').value,
-            damage: document.getElementById('damageNotes').value
+            damage: combinedDamageNotes
+        },
+        damageMarks: {
+            vehicleType: selectedVehicleType,
+            areas: damageMarks[selectedVehicleType]
         },
         signature: hasSignature ? canvas.toDataURL() : null,
         photos: []

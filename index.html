@@ -147,9 +147,83 @@
                     <label for="driverNotes">Notes</label>
                     <textarea id="driverNotes" rows="4"></textarea>
                 </div>
+                
+                <!-- Vehicle Damage Diagram -->
                 <div class="form-group">
-                    <label for="damageNotes">Pre-existing Damage</label>
-                    <textarea id="damageNotes" rows="3"></textarea>
+                    <label>Pre-existing Damage - Mark on Diagram</label>
+                    <div class="vehicle-type-selector">
+                        <button type="button" class="vehicle-btn active" onclick="selectVehicleType('car')">🚗 Car</button>
+                        <button type="button" class="vehicle-btn" onclick="selectVehicleType('truck')">🚛 Truck</button>
+                    </div>
+                    
+                    <!-- Car Diagram -->
+                    <div id="carDiagram" class="damage-diagram active">
+                        <svg viewBox="0 0 400 200" class="vehicle-svg">
+                            <!-- Car body -->
+                            <rect x="50" y="60" width="300" height="80" rx="10" fill="#e0e0e0" stroke="#333" stroke-width="2"/>
+                            <!-- Windshield -->
+                            <rect x="140" y="65" width="120" height="40" fill="#b3d9ff" stroke="#333" stroke-width="2"/>
+                            <!-- Hood -->
+                            <rect x="50" y="60" width="80" height="80" rx="10" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="hood" onclick="toggleDamage(event, 'car', 'hood')"/>
+                            <!-- Roof -->
+                            <rect x="140" y="60" width="120" height="40" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="roof" onclick="toggleDamage(event, 'car', 'roof')"/>
+                            <!-- Trunk -->
+                            <rect x="270" y="60" width="80" height="80" rx="10" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="trunk" onclick="toggleDamage(event, 'car', 'trunk')"/>
+                            <!-- Front left door -->
+                            <rect x="130" y="100" width="60" height="40" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="front-left-door" onclick="toggleDamage(event, 'car', 'front-left-door')"/>
+                            <!-- Rear left door -->
+                            <rect x="200" y="100" width="60" height="40" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="rear-left-door" onclick="toggleDamage(event, 'car', 'rear-left-door')"/>
+                            <!-- Front bumper -->
+                            <rect x="30" y="80" width="20" height="40" rx="5" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="front-bumper" onclick="toggleDamage(event, 'car', 'front-bumper')"/>
+                            <!-- Rear bumper -->
+                            <rect x="350" y="80" width="20" height="40" rx="5" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="rear-bumper" onclick="toggleDamage(event, 'car', 'rear-bumper')"/>
+                            <!-- Wheels -->
+                            <circle cx="90" cy="150" r="15" fill="#333" class="damage-area" data-area="front-left-wheel" onclick="toggleDamage(event, 'car', 'front-left-wheel')"/>
+                            <circle cx="310" cy="150" r="15" fill="#333" class="damage-area" data-area="rear-left-wheel" onclick="toggleDamage(event, 'car', 'rear-left-wheel')"/>
+                            <!-- Labels -->
+                            <text x="200" y="30" text-anchor="middle" font-size="14" font-weight="bold">Tap areas to mark damage</text>
+                        </svg>
+                    </div>
+                    
+                    <!-- Truck Diagram -->
+                    <div id="truckDiagram" class="damage-diagram">
+                        <svg viewBox="0 0 500 250" class="vehicle-svg">
+                            <!-- Truck cab -->
+                            <rect x="50" y="80" width="120" height="100" rx="10" fill="#e0e0e0" stroke="#333" stroke-width="2"/>
+                            <!-- Windshield -->
+                            <rect x="60" y="85" width="100" height="50" fill="#b3d9ff" stroke="#333" stroke-width="2"/>
+                            <!-- Cargo bed -->
+                            <rect x="180" y="80" width="270" height="100" rx="10" fill="#e0e0e0" stroke="#333" stroke-width="2"/>
+                            <!-- Cab roof -->
+                            <rect x="50" y="80" width="120" height="40" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="cab-roof" onclick="toggleDamage(event, 'truck', 'cab-roof')"/>
+                            <!-- Cab door -->
+                            <rect x="50" y="120" width="120" height="60" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="cab-door" onclick="toggleDamage(event, 'truck', 'cab-door')"/>
+                            <!-- Front bumper -->
+                            <rect x="20" y="110" width="30" height="50" rx="5" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="front-bumper" onclick="toggleDamage(event, 'truck', 'front-bumper')"/>
+                            <!-- Cargo bed left -->
+                            <rect x="180" y="80" width="135" height="100" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="cargo-left" onclick="toggleDamage(event, 'truck', 'cargo-left')"/>
+                            <!-- Cargo bed right -->
+                            <rect x="315" y="80" width="135" height="100" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="cargo-right" onclick="toggleDamage(event, 'truck', 'cargo-right')"/>
+                            <!-- Rear bumper -->
+                            <rect x="450" y="110" width="30" height="50" rx="5" fill="#e0e0e0" stroke="#333" stroke-width="2" class="damage-area" data-area="rear-bumper" onclick="toggleDamage(event, 'truck', 'rear-bumper')"/>
+                            <!-- Wheels -->
+                            <circle cx="100" cy="190" r="20" fill="#333" class="damage-area" data-area="front-wheel" onclick="toggleDamage(event, 'truck', 'front-wheel')"/>
+                            <circle cx="230" cy="190" r="20" fill="#333" class="damage-area" data-area="rear-wheel-1" onclick="toggleDamage(event, 'truck', 'rear-wheel-1')"/>
+                            <circle cx="420" cy="190" r="20" fill="#333" class="damage-area" data-area="rear-wheel-2" onclick="toggleDamage(event, 'truck', 'rear-wheel-2')"/>
+                            <!-- Labels -->
+                            <text x="250" y="40" text-anchor="middle" font-size="14" font-weight="bold">Tap areas to mark damage</text>
+                        </svg>
+                    </div>
+                    
+                    <div class="damage-legend">
+                        <span class="legend-item"><span class="legend-color normal"></span> Normal</span>
+                        <span class="legend-item"><span class="legend-color damaged"></span> Damaged</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="damageNotes">Additional Damage Notes</label>
+                    <textarea id="damageNotes" rows="3" placeholder="Describe any damage in detail..."></textarea>
                 </div>
             </section>
 
