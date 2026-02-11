@@ -1,5 +1,7 @@
 let allItems = [];
+let allSales = [];
 let editingItemId = null;
+let sellingItemId = null;
 let currentPhotoData = null;
 
 const API_URL = 'https://mh-towing-job-cards.onrender.com';
@@ -8,6 +10,7 @@ const API_URL = 'https://mh-towing-job-cards.onrender.com';
 window.addEventListener('load', () => {
     loadStats();
     loadInventory();
+    loadSales();
 });
 
 function loadStats() {
@@ -21,6 +24,17 @@ function loadStats() {
         })
         .catch(error => {
             console.error('Error loading stats:', error);
+        });
+    
+    // Load sales stats
+    fetch(`${API_URL}/api/spares/sales/stats`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('todaySales').textContent = 'R ' + (data.todaySales || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('totalSales').textContent = 'R ' + (data.totalSales || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+        })
+        .catch(error => {
+            console.error('Error loading sales stats:', error);
         });
 }
 
@@ -269,34 +283,246 @@ function sellItem(itemId) {
         return;
     }
     
-    const quantity = prompt(`How many units to sell? (Available: ${item.quantity})`);
-    if (!quantity || quantity <= 0) return;
+    sellingItemId = itemId;
     
-    const sellQty = parseInt(quantity);
-    if (sellQty > item.quantity) {
+    // Populate sell form
+    document.getElementById('sellQuantity').max = item.quantity;
+    document.getElementById('sellQuantity').value = 1;
+    document.getElementById('sellPrice').value = item.sellingPrice;
+    document.getElementById('customerName').value = '';
+    document.getElementById('customerPhone').value = '';
+    document.getElementById('saleNotes').value = '';
+    
+    // Show item info
+    document.getElementById('sellItemInfo').innerHTML = `
+        <div class="sell-info-item">
+            <span class="sell-info-label">Part:</span>
+            <span class="sell-info-value">${item.partName}</span>
+        </div>
+        ${item.partNumber ? `
+        <div class="sell-info-item">
+            <span class="sell-info-label">Part Number:</span>
+            <span class="sell-info-value">${item.partNumber}</span>
+        </div>
+        ` : ''}
+        <div class="sell-info-item">
+            <span class="sell-info-label">Available Stock:</span>
+            <span class="sell-info-value">${item.quantity} units</span>
+        </div>
+        <div class="sell-info-item">
+            <span class="sell-info-label">Standard Price:</span>
+            <span class="sell-info-value">R ${parseFloat(item.sellingPrice).toFixed(2)}</span>
+        </div>
+    `;
+    
+    updateSaleTotal();
+    document.getElementById('sellModal').style.display = 'block';
+    
+    // Add event listeners for total calculation
+    document.getElementById('sellQuantity').addEventListener('input', updateSaleTotal);
+    document.getElementById('sellPrice').addEventListener('input', updateSaleTotal);
+}
+
+function updateSaleTotal() {
+    const quantity = parseInt(document.getElementById('sellQuantity').value) || 0;
+    const price = parseFloat(document.getElementById('sellPrice').value) || 0;
+    const total = quantity * price;
+    document.getElementById('saleTotal').textContent = 'R ' + total.toFixed(2);
+}
+
+function processSale(event) {
+    event.preventDefault();
+    
+    const item = allItems.find(i => i.id === sellingItemId);
+    if (!item) return;
+    
+    const quantity = parseInt(document.getElementById('sellQuantity').value);
+    const price = parseFloat(document.getElementById('sellPrice').value);
+    const total = quantity * price;
+    
+    if (quantity > item.quantity) {
         alert('Not enough stock available!');
         return;
     }
     
-    const newQuantity = item.quantity - sellQty;
+    const saleData = {
+        id: 'SALE-' + Date.now(),
+        itemId: item.id,
+        partName: item.partName,
+        partNumber: item.partNumber || '',
+        category: item.category,
+        quantity: quantity,
+        unitPrice: price,
+        totalAmount: total,
+        costPrice: item.costPrice || 0,
+        profit: total - (item.costPrice * quantity),
+        customerName: document.getElementById('customerName').value,
+        customerPhone: document.getElementById('customerPhone').value,
+        notes: document.getElementById('saleNotes').value,
+        saleDate: new Date().toISOString()
+    };
     
-    fetch(`${API_URL}/api/spares/${itemId}`, {
-        method: 'PUT',
+    // Save sale
+    fetch(`${API_URL}/api/spares/sales`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...item, quantity: newQuantity, updated_at: new Date().toISOString() })
+        body: JSON.stringify(saleData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`✅ Sold ${sellQty} unit(s) of ${item.partName}\nTotal: R ${(sellQty * item.sellingPrice).toFixed(2)}`);
+            // Update item stock
+            const newQuantity = item.quantity - quantity;
+            return fetch(`${API_URL}/api/spares/${sellingItemId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...item, quantity: newQuantity, updated_at: new Date().toISOString() })
+            });
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Sale completed!\n\nQuantity: ${quantity}\nTotal: R ${total.toFixed(2)}`);
+            closeSellModal();
             loadStats();
             loadInventory();
+            loadSales();
         }
     })
     .catch(error => {
-        console.error('Error updating stock:', error);
-        alert('Error updating stock');
+        console.error('Error processing sale:', error);
+        alert('Error processing sale');
     });
+}
+
+function loadSales() {
+    fetch(`${API_URL}/api/spares/sales`)
+        .then(response => response.json())
+        .then(data => {
+            allSales = data;
+        })
+        .catch(error => {
+            console.error('Error loading sales:', error);
+        });
+}
+
+function showSalesHistory() {
+    loadSales();
+    
+    // Calculate sales summaries
+    fetch(`${API_URL}/api/spares/sales/stats`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('modalTodaySales').textContent = 'R ' + (data.todaySales || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('modalWeekSales').textContent = 'R ' + (data.weekSales || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('modalMonthSales').textContent = 'R ' + (data.monthSales || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+            document.getElementById('modalTotalSales').textContent = 'R ' + (data.totalSales || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2 });
+        });
+    
+    // Load and display sales
+    setTimeout(() => {
+        displaySales(allSales);
+    }, 500);
+    
+    document.getElementById('salesModal').style.display = 'block';
+}
+
+function displaySales(sales) {
+    const container = document.getElementById('salesList');
+    
+    if (sales.length === 0) {
+        container.innerHTML = `
+            <div class="no-sales">
+                <div class="no-sales-icon">📊</div>
+                <p>No sales recorded yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = sales.map(sale => `
+        <div class="sale-item">
+            <div class="sale-header">
+                <div>
+                    <strong>${sale.partName}</strong>
+                    ${sale.partNumber ? `<span style="color: #999; font-size: 12px; margin-left: 8px;">#${sale.partNumber}</span>` : ''}
+                </div>
+                <div class="sale-amount">R ${parseFloat(sale.totalAmount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div class="sale-date">${formatDate(sale.saleDate)}</div>
+            <div class="sale-details">
+                <div class="sale-detail">
+                    <div class="sale-detail-label">Quantity</div>
+                    <div class="sale-detail-value">${sale.quantity} units</div>
+                </div>
+                <div class="sale-detail">
+                    <div class="sale-detail-label">Unit Price</div>
+                    <div class="sale-detail-value">R ${parseFloat(sale.unitPrice).toFixed(2)}</div>
+                </div>
+                ${sale.profit ? `
+                <div class="sale-detail">
+                    <div class="sale-detail-label">Profit</div>
+                    <div class="sale-detail-value" style="color: #4caf50;">R ${parseFloat(sale.profit).toFixed(2)}</div>
+                </div>
+                ` : ''}
+                ${sale.customerName ? `
+                <div class="sale-detail">
+                    <div class="sale-detail-label">Customer</div>
+                    <div class="sale-detail-value">${sale.customerName}</div>
+                </div>
+                ` : ''}
+                ${sale.customerPhone ? `
+                <div class="sale-detail">
+                    <div class="sale-detail-label">Phone</div>
+                    <div class="sale-detail-value">${sale.customerPhone}</div>
+                </div>
+                ` : ''}
+            </div>
+            ${sale.notes ? `
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e8e8e8; font-size: 13px; color: #666;">
+                <strong>Notes:</strong> ${sale.notes}
+            </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function filterSales() {
+    const dateFrom = document.getElementById('salesDateFrom').value;
+    const dateTo = document.getElementById('salesDateTo').value;
+    const searchTerm = document.getElementById('salesSearch').value.toLowerCase();
+    
+    let filtered = allSales;
+    
+    if (dateFrom) {
+        filtered = filtered.filter(sale => new Date(sale.saleDate) >= new Date(dateFrom));
+    }
+    
+    if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        filtered = filtered.filter(sale => new Date(sale.saleDate) <= endDate);
+    }
+    
+    if (searchTerm) {
+        filtered = filtered.filter(sale => 
+            sale.partName.toLowerCase().includes(searchTerm) ||
+            (sale.partNumber && sale.partNumber.toLowerCase().includes(searchTerm)) ||
+            (sale.customerName && sale.customerName.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    displaySales(filtered);
+}
+
+function closeSellModal() {
+    document.getElementById('sellModal').style.display = 'none';
+    sellingItemId = null;
+}
+
+function closeSalesModal() {
+    document.getElementById('salesModal').style.display = 'none';
 }
 
 function deleteItem(itemId) {
@@ -405,10 +631,19 @@ function formatDate(dateString) {
 window.onclick = function(event) {
     const itemModal = document.getElementById('itemModal');
     const viewModal = document.getElementById('viewModal');
+    const sellModal = document.getElementById('sellModal');
+    const salesModal = document.getElementById('salesModal');
+    
     if (event.target === itemModal) {
         closeItemModal();
     }
     if (event.target === viewModal) {
         closeViewModal();
+    }
+    if (event.target === sellModal) {
+        closeSellModal();
+    }
+    if (event.target === salesModal) {
+        closeSalesModal();
     }
 }

@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = './data';
 const JOB_CARDS_FILE = path.join(DATA_DIR, 'jobcards.json');
 const SPARES_FILE = path.join(DATA_DIR, 'spares.json');
+const SALES_FILE = path.join(DATA_DIR, 'sales.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -25,6 +26,11 @@ if (!fs.existsSync(JOB_CARDS_FILE)) {
 // Initialize spares file if it doesn't exist
 if (!fs.existsSync(SPARES_FILE)) {
     fs.writeFileSync(SPARES_FILE, JSON.stringify([]));
+}
+
+// Initialize sales file if it doesn't exist
+if (!fs.existsSync(SALES_FILE)) {
+    fs.writeFileSync(SALES_FILE, JSON.stringify([]));
 }
 
 // Start automatic backup system (every 24 hours)
@@ -49,6 +55,15 @@ function readSpares() {
 
 function writeSpares(spares) {
     fs.writeFileSync(SPARES_FILE, JSON.stringify(spares, null, 2));
+}
+
+function readSales() {
+    const data = fs.readFileSync(SALES_FILE, 'utf8');
+    return JSON.parse(data);
+}
+
+function writeSales(sales) {
+    fs.writeFileSync(SALES_FILE, JSON.stringify(sales, null, 2));
 }
 
 // Middleware
@@ -259,6 +274,69 @@ app.get('/api/spares/stats', (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching spares stats:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ===== SALES API ROUTES =====
+
+// Get all sales
+app.get('/api/spares/sales', (req, res) => {
+    try {
+        const sales = readSales();
+        sales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+        res.json(sales);
+    } catch (error) {
+        console.error('Error fetching sales:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add new sale
+app.post('/api/spares/sales', (req, res) => {
+    try {
+        const sale = req.body;
+        const sales = readSales();
+        sales.push(sale);
+        writeSales(sales);
+        res.json({ success: true, id: sale.id });
+    } catch (error) {
+        console.error('Error adding sale:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get sales statistics
+app.get('/api/spares/sales/stats', (req, res) => {
+    try {
+        const sales = readSales();
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        const todaySales = sales
+            .filter(s => new Date(s.saleDate) >= today)
+            .reduce((sum, s) => sum + s.totalAmount, 0);
+        
+        const weekSales = sales
+            .filter(s => new Date(s.saleDate) >= weekAgo)
+            .reduce((sum, s) => sum + s.totalAmount, 0);
+        
+        const monthSales = sales
+            .filter(s => new Date(s.saleDate) >= monthStart)
+            .reduce((sum, s) => sum + s.totalAmount, 0);
+        
+        const totalSales = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+        
+        res.json({
+            todaySales,
+            weekSales,
+            monthSales,
+            totalSales
+        });
+    } catch (error) {
+        console.error('Error fetching sales stats:', error);
         res.status(500).json({ error: error.message });
     }
 });

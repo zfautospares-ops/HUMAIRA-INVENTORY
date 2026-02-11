@@ -18,6 +18,7 @@
             </div>
             <div class="header-actions">
                 <a href="admin.html" class="btn-back">← Dashboard</a>
+                <button onclick="showSalesHistory()" class="btn-sales-history">📊 Sales</button>
                 <button onclick="showAddItemForm()" class="btn-add">➕ Add Item</button>
             </div>
         </header>
@@ -44,6 +45,14 @@
             <div class="stat-card">
                 <div class="stat-value" id="totalValue">R 0</div>
                 <div class="stat-label">Total Value</div>
+            </div>
+            <div class="stat-card stat-highlight">
+                <div class="stat-value" id="todaySales">R 0</div>
+                <div class="stat-label">Today's Sales</div>
+            </div>
+            <div class="stat-card stat-highlight">
+                <div class="stat-value" id="totalSales">R 0</div>
+                <div class="stat-label">Total Sales</div>
             </div>
         </div>
 
@@ -157,6 +166,87 @@
             <div class="modal-content">
                 <span class="close" onclick="closeViewModal()">&times;</span>
                 <div id="viewModalBody"></div>
+            </div>
+        </div>
+
+        <!-- Sales History Modal -->
+        <div id="salesModal" class="modal">
+            <div class="modal-content modal-large">
+                <span class="close" onclick="closeSalesModal()">&times;</span>
+                <h2>📊 Sales History</h2>
+                
+                <div class="sales-summary">
+                    <div class="summary-card">
+                        <div class="summary-label">Today's Sales</div>
+                        <div class="summary-value" id="modalTodaySales">R 0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">This Week</div>
+                        <div class="summary-value" id="modalWeekSales">R 0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">This Month</div>
+                        <div class="summary-value" id="modalMonthSales">R 0.00</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-label">Total Sales</div>
+                        <div class="summary-value" id="modalTotalSales">R 0.00</div>
+                    </div>
+                </div>
+
+                <div class="sales-filters">
+                    <input type="date" id="salesDateFrom" onchange="filterSales()">
+                    <input type="date" id="salesDateTo" onchange="filterSales()">
+                    <input type="text" id="salesSearch" placeholder="🔍 Search by part name or customer..." onkeyup="filterSales()">
+                </div>
+
+                <div class="sales-list" id="salesList">
+                    <div class="loading">Loading sales history...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sell Item Modal -->
+        <div id="sellModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeSellModal()">&times;</span>
+                <h2>💰 Record Sale</h2>
+                <form id="sellForm" onsubmit="processSale(event)">
+                    <div id="sellItemInfo" class="sell-info"></div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Quantity to Sell *</label>
+                            <input type="number" id="sellQuantity" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit Price (R) *</label>
+                            <input type="number" id="sellPrice" step="0.01" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Customer Name</label>
+                            <input type="text" id="customerName" placeholder="Optional">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Customer Phone</label>
+                            <input type="tel" id="customerPhone" placeholder="Optional">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Notes</label>
+                            <textarea id="saleNotes" rows="2" placeholder="Additional sale details..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="sale-total">
+                        <div class="total-label">Total Amount:</div>
+                        <div class="total-value" id="saleTotal">R 0.00</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="closeSellModal()" class="btn-cancel">Cancel</button>
+                        <button type="submit" class="btn-save">Complete Sale</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
