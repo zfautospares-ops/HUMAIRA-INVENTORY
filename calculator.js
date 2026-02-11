@@ -794,12 +794,31 @@ function parseCoordinates(str) {
     return null;
 }
 
-// Share quote
-function shareQuote() {
+// Toggle share menu
+function toggleShareMenu() {
+    const menu = document.getElementById('shareMenu');
+    menu.classList.toggle('show');
+}
+
+// Close share menu when clicking outside
+document.addEventListener('click', function(event) {
+    const shareDropdown = document.querySelector('.share-dropdown');
+    if (shareDropdown && !shareDropdown.contains(event.target)) {
+        document.getElementById('shareMenu').classList.remove('show');
+    }
+});
+
+// Generate quotation text
+function generateQuotation() {
     const distance = parseFloat(document.getElementById('distanceValue').textContent);
     const total = document.getElementById('totalPrice').textContent;
     const from = document.getElementById('fromLocation').value;
     const to = document.getElementById('toLocation').value;
+    
+    if (!from || !to || distance === 0) {
+        alert('⚠️ Please calculate a route first before sharing a quote.');
+        return null;
+    }
     
     // Get route mode
     const routeMode = document.querySelector('input[name="routeMode"]:checked').value;
@@ -810,20 +829,36 @@ function shareQuote() {
         routeDetails = `\nRoute:\n• Workshop to Pickup\n• Pickup to Delivery\n• Delivery to Workshop\n\nWorkshop: ${workshopLocation}`;
     }
     
-    // Professional quotation message (no fuel costs or profit)
+    return {
+        from,
+        to,
+        distance,
+        total,
+        routeDetails
+    };
+}
+
+// Share quote in different formats
+function shareQuote(format) {
+    const quote = generateQuotation();
+    if (!quote) return;
+    
+    // Close the menu
+    document.getElementById('shareMenu').classList.remove('show');
+    
     const message = `━━━━━━━━━━━━━━━━━━━━━━
 MH TOWING - QUOTATION
 ━━━━━━━━━━━━━━━━━━━━━━
 
 PICKUP LOCATION:
-${from}
+${quote.from}
 
 DELIVERY LOCATION:
-${to}${routeDetails}
+${quote.to}${quote.routeDetails}
 
-DISTANCE: ${distance.toFixed(2)} km
+DISTANCE: ${quote.distance.toFixed(2)} km
 
-QUOTED PRICE: ${total}
+QUOTED PRICE: ${quote.total}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 Contact us:
@@ -834,20 +869,95 @@ Contact us:
 
 This quote is valid for 7 days.
 Terms and conditions apply.`;
+
+    const shortMessage = `MH TOWING QUOTE\n\nFrom: ${quote.from}\nTo: ${quote.to}\nDistance: ${quote.distance.toFixed(2)} km\nPrice: ${quote.total}\n\nContact: 061 453 2160`;
     
-    if (navigator.share) {
-        navigator.share({
-            title: 'MH Towing Quotation',
-            text: message
-        }).catch(err => console.log('Error sharing:', err));
-    } else {
-        // Fallback: copy to clipboard
-        navigator.clipboard.writeText(message).then(() => {
-            alert('✅ Professional quotation copied to clipboard!\n\nYou can now paste it into WhatsApp, SMS, or email.');
-        }).catch(() => {
-            // If clipboard fails, show in alert
-            alert(message);
-        });
+    switch(format) {
+        case 'whatsapp':
+            // WhatsApp format
+            const whatsappText = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
+            window.open(whatsappUrl, '_blank');
+            break;
+            
+        case 'sms':
+            // SMS format (shorter for SMS limits)
+            const smsText = encodeURIComponent(shortMessage);
+            window.location.href = `sms:?body=${smsText}`;
+            break;
+            
+        case 'email':
+            // Email format
+            const subject = encodeURIComponent('MH Towing - Quotation');
+            const body = encodeURIComponent(message);
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            break;
+            
+        case 'copy':
+            // Copy to clipboard
+            navigator.clipboard.writeText(message).then(() => {
+                alert('✅ Quotation copied to clipboard!\n\nYou can now paste it anywhere.');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = message;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Quotation copied to clipboard!');
+            });
+            break;
+            
+        case 'print':
+            // Print format
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>MH Towing - Quotation</title>
+                    <style>
+                        body {
+                            font-family: 'Courier New', monospace;
+                            padding: 40px;
+                            max-width: 600px;
+                            margin: 0 auto;
+                        }
+                        pre {
+                            white-space: pre-wrap;
+                            font-size: 14px;
+                            line-height: 1.6;
+                        }
+                        @media print {
+                            body { padding: 20px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <pre>${message}</pre>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            break;
+            
+        default:
+            // Fallback to native share if available
+            if (navigator.share) {
+                navigator.share({
+                    title: 'MH Towing Quotation',
+                    text: message
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Copy to clipboard as fallback
+                shareQuote('copy');
+            }
     }
 }
 

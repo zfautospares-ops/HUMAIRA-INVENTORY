@@ -560,3 +560,66 @@ header h2 {
         font-size: 20px;
     }
 }
+
+/* Share Dropdown Menu */
+.share-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.share-menu {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    min-width: 180px;
+    margin-bottom: 8px;
+    z-index: 1000;
+}
+
+.share-menu.show {
+    display: block;
+}
+
+.share-menu button {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    background: white;
+    color: #333;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 0;
+}
+
+.share-menu button:first-child {
+    border-radius: 6px 6px 0 0;
+}
+
+.share-menu button:last-child {
+    border-radius: 0 0 6px 6px;
+}
+
+.share-menu button:hover {
+    background: #f0f0ff;
+    color: #667eea;
+}
+
+.share-menu button:active {
+    background: #e0e0ff;
+}
+
+@media (max-width: 768px) {
+    .share-menu {
+        left: auto;
+        right: 0;
+    }
+}

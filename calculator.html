@@ -347,7 +347,16 @@
             <!-- Action Buttons -->
             <div class="actions">
                 <button class="btn-calculate" onclick="calculateAll()">🔄 Recalculate</button>
-                <button class="btn-share" onclick="shareQuote()">📤 Share Quote</button>
+                <div class="share-dropdown">
+                    <button class="btn-share" onclick="toggleShareMenu()">📤 Share Quote ▼</button>
+                    <div id="shareMenu" class="share-menu">
+                        <button onclick="shareQuote('whatsapp')">📱 WhatsApp</button>
+                        <button onclick="shareQuote('sms')">💬 SMS</button>
+                        <button onclick="shareQuote('email')">📧 Email</button>
+                        <button onclick="shareQuote('copy')">📋 Copy Text</button>
+                        <button onclick="shareQuote('print')">🖨️ Print</button>
+                    </div>
+                </div>
                 <button class="btn-reset" onclick="resetCalculator()">🔄 Reset</button>
             </div>
 
