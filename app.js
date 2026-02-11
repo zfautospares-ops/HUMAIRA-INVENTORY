@@ -194,7 +194,7 @@ function getLocation(type) {
     );
 }
 
-// Calculate all distances for the complete route
+// Calculate all distances for the complete route using Google Maps
 function calculateAllDistances() {
     const routeSegments = document.getElementById('routeSegments');
     const distanceBreakdown = document.getElementById('distanceBreakdown');
@@ -202,8 +202,6 @@ function calculateAllDistances() {
     if (!routeSegments) return;
     
     routeSegments.innerHTML = '';
-    let totalDistance = 0;
-    let hasLocations = false;
     
     // Build route array
     const route = [];
@@ -228,19 +226,131 @@ function calculateAllDistances() {
         route.push({ name: 'Workshop (Return)', coords: workshopCoords });
     }
     
+    if (route.length < 2) {
+        distanceBreakdown.style.display = 'none';
+        document.getElementById('showMapBtn').style.display = 'none';
+        return;
+    }
+    
+    // Use Google Maps Distance Matrix API for accurate road distances
+    if (typeof google !== 'undefined' && google.maps && google.maps.DistanceMatrixService) {
+        calculateWithGoogleMaps(route);
+    } else {
+        // Fallback to Haversine if Google Maps not available
+        calculateWithHaversine(route);
+    }
+}
+
+// Calculate distances using Google Maps Distance Matrix API (accurate road distances)
+function calculateWithGoogleMaps(route) {
+    const service = new google.maps.DistanceMatrixService();
+    const routeSegments = document.getElementById('routeSegments');
+    const distanceBreakdown = document.getElementById('distanceBreakdown');
+    
+    routeSegments.innerHTML = '<div class="loading" style="padding: 10px; text-align: center; color: #667eea;">📍 Calculating road distances...</div>';
+    distanceBreakdown.style.display = 'block';
+    
+    let totalDistance = 0;
+    let segmentsCalculated = 0;
+    const totalSegments = route.length - 1;
+    const segments = [];
+    
+    // Calculate each segment
+    for (let i = 0; i < route.length - 1; i++) {
+        const from = route[i];
+        const to = route[i + 1];
+        
+        const origin = new google.maps.LatLng(from.coords.lat, from.coords.lon);
+        const destination = new google.maps.LatLng(to.coords.lat, to.coords.lon);
+        
+        service.getDistanceMatrix({
+            origins: [origin],
+            destinations: [destination],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.METRIC
+        }, function(response, status) {
+            if (status === 'OK' && response.rows[0].elements[0].status === 'OK') {
+                const distanceInMeters = response.rows[0].elements[0].distance.value;
+                const distanceInKm = distanceInMeters / 1000;
+                
+                segments[i] = {
+                    from: from.name,
+                    to: to.name,
+                    distance: distanceInKm,
+                    index: i
+                };
+                
+                totalDistance += distanceInKm;
+            } else {
+                // Fallback to Haversine for this segment
+                const distance = calculateDistanceBetween(from.coords, to.coords);
+                segments[i] = {
+                    from: from.name,
+                    to: to.name,
+                    distance: distance,
+                    index: i
+                };
+                totalDistance += distance;
+            }
+            
+            segmentsCalculated++;
+            
+            // When all segments are calculated, display them
+            if (segmentsCalculated === totalSegments) {
+                displayDistanceSegments(segments, totalDistance);
+            }
+        });
+    }
+}
+
+// Display distance segments in order
+function displayDistanceSegments(segments, totalDistance) {
+    const routeSegments = document.getElementById('routeSegments');
+    const distanceBreakdown = document.getElementById('distanceBreakdown');
+    
+    routeSegments.innerHTML = '';
+    
+    // Sort segments by index to maintain order
+    segments.sort((a, b) => a.index - b.index);
+    
+    segments.forEach((segment, index) => {
+        const segmentDiv = document.createElement('div');
+        segmentDiv.className = 'distance-item';
+        segmentDiv.innerHTML = `
+            <span class="distance-label">${index === 0 ? '🏠' : '🚗'} ${segment.from} → ${segment.to}:</span>
+            <span class="distance-value">${segment.distance.toFixed(2)} km</span>
+        `;
+        routeSegments.appendChild(segmentDiv);
+    });
+    
+    // Update total
+    document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
+    document.getElementById('mileage').value = totalDistance.toFixed(2);
+    
+    distanceBreakdown.style.display = 'block';
+    document.getElementById('showMapBtn').style.display = 'inline-block';
+}
+
+// Fallback: Calculate distances using Haversine formula (straight-line distance)
+function calculateWithHaversine(route) {
+    const routeSegments = document.getElementById('routeSegments');
+    const distanceBreakdown = document.getElementById('distanceBreakdown');
+    
+    routeSegments.innerHTML = '';
+    let totalDistance = 0;
+    
     // Calculate distances between consecutive points
     for (let i = 0; i < route.length - 1; i++) {
         const from = route[i];
         const to = route[i + 1];
         const distance = calculateDistanceBetween(from.coords, to.coords);
         totalDistance += distance;
-        hasLocations = true;
         
         const segmentDiv = document.createElement('div');
         segmentDiv.className = 'distance-item';
         segmentDiv.innerHTML = `
             <span class="distance-label">${i === 0 ? '🏠' : '🚗'} ${from.name} → ${to.name}:</span>
-            <span class="distance-value">${distance.toFixed(2)} km</span>
+            <span class="distance-value">${distance.toFixed(2)} km (approx)</span>
         `;
         routeSegments.appendChild(segmentDiv);
     }
@@ -249,14 +359,8 @@ function calculateAllDistances() {
     document.getElementById('totalDistance').textContent = totalDistance.toFixed(2) + ' km';
     document.getElementById('mileage').value = totalDistance.toFixed(2);
     
-    // Show/hide distance breakdown and map button
-    if (hasLocations) {
-        distanceBreakdown.style.display = 'block';
-        document.getElementById('showMapBtn').style.display = 'inline-block';
-    } else {
-        distanceBreakdown.style.display = 'none';
-        document.getElementById('showMapBtn').style.display = 'none';
-    }
+    distanceBreakdown.style.display = 'block';
+    document.getElementById('showMapBtn').style.display = 'inline-block';
 }
 
 // Update route display with Google Maps route data
