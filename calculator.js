@@ -1,10 +1,12 @@
 // Location coordinates
 let fromCoords = null;
 let toCoords = null;
-let fromAutocomplete, toAutocomplete;
+let workshopCoords = null;
+let fromAutocomplete, toAutocomplete, workshopAutocomplete;
 let map, directionsService, directionsRenderer;
 let currentRoutes = [];
 let isManualDistance = false;
+let isWorkshopRoute = false;
 
 // Initialize Google Maps
 function initMap() {
@@ -46,9 +48,11 @@ function initAutocomplete() {
 
         const fromInput = document.getElementById('fromLocation');
         const toInput = document.getElementById('toLocation');
+        const workshopInput = document.getElementById('workshopLocation');
 
         fromAutocomplete = new google.maps.places.Autocomplete(fromInput, options);
         toAutocomplete = new google.maps.places.Autocomplete(toInput, options);
+        workshopAutocomplete = new google.maps.places.Autocomplete(workshopInput, options);
 
         fromAutocomplete.addListener('place_changed', function() {
             const place = fromAutocomplete.getPlace();
@@ -74,10 +78,44 @@ function initAutocomplete() {
             }
         });
 
+        workshopAutocomplete.addListener('place_changed', function() {
+            const place = workshopAutocomplete.getPlace();
+            if (place.geometry) {
+                workshopCoords = {
+                    lat: place.geometry.location.lat(),
+                    lon: place.geometry.location.lng()
+                };
+                workshopInput.value = place.formatted_address || place.name;
+                calculateRoutes();
+            }
+        });
+
         console.log('Google Maps initialized!');
     } catch (error) {
         console.error('Error initializing Google Maps:', error);
     }
+}
+
+// Toggle route type
+function toggleRouteType() {
+    const routeType = document.querySelector('input[name="routeType"]:checked').value;
+    isWorkshopRoute = (routeType === 'workshop');
+    
+    const workshopSection = document.getElementById('workshopSection');
+    const simpleDistance = document.getElementById('simpleDistance');
+    const workshopDistance = document.getElementById('workshopDistance');
+    
+    if (isWorkshopRoute) {
+        workshopSection.style.display = 'block';
+        simpleDistance.style.display = 'none';
+        workshopDistance.style.display = 'block';
+    } else {
+        workshopSection.style.display = 'none';
+        simpleDistance.style.display = 'block';
+        workshopDistance.style.display = 'none';
+    }
+    
+    calculateRoutes();
 }
 
 // Get GPS location
@@ -100,9 +138,12 @@ function getLocation(type) {
             if (type === 'from') {
                 document.getElementById('fromLocation').value = locationString;
                 fromCoords = { lat, lon };
-            } else {
+            } else if (type === 'to') {
                 document.getElementById('toLocation').value = locationString;
                 toCoords = { lat, lon };
+            } else if (type === 'workshop') {
+                document.getElementById('workshopLocation').value = locationString;
+                workshopCoords = { lat, lon };
             }
             
             calculateRoutes();
@@ -124,12 +165,20 @@ function calculateRoutes() {
         return; // Skip if manual mode
     }
 
+    if (isWorkshopRoute) {
+        calculateWorkshopRoute();
+    } else {
+        calculateSimpleRoute();
+    }
+}
+
+// Calculate simple route (pickup to delivery)
+function calculateSimpleRoute() {
     if (!fromCoords || !toCoords) {
         return;
     }
 
     if (!directionsService) {
-        console.log('Directions service not available, using straight-line distance');
         const distance = calculateDistance();
         updateDistanceDisplay(distance);
         calculateAll();
@@ -149,65 +198,104 @@ function calculateRoutes() {
         avoidTolls: false
     };
 
-    console.log('Requesting routes from Google Directions API...');
-
     directionsService.route(request, function(result, status) {
-        console.log('Directions API status:', status);
-        
         if (status === 'OK') {
             currentRoutes = result.routes;
-            console.log('Found', currentRoutes.length, 'route(s)');
-            
-            // If only one route, try to get alternatives by avoiding highways
-            if (currentRoutes.length === 1) {
-                // Show the main route first
-                displayRouteOptions(result.routes);
-                selectRoute(0);
-                
-                // Try to get alternative route avoiding highways
-                const altRequest = {
-                    ...request,
-                    avoidHighways: true
-                };
-                
-                directionsService.route(altRequest, function(altResult, altStatus) {
-                    if (altStatus === 'OK' && altResult.routes.length > 0) {
-                        const altRoute = altResult.routes[0];
-                        const mainRoute = currentRoutes[0];
-                        
-                        // Only add if it's significantly different
-                        const mainDistance = mainRoute.legs[0].distance.value;
-                        const altDistance = altRoute.legs[0].distance.value;
-                        const difference = Math.abs(mainDistance - altDistance) / mainDistance;
-                        
-                        if (difference > 0.05) { // More than 5% different
-                            currentRoutes.push(altRoute);
-                            displayRouteOptions(currentRoutes);
-                        }
-                    }
-                });
-            } else {
-                displayRouteOptions(result.routes);
-                selectRoute(0);
-            }
-        } else if (status === 'ZERO_RESULTS') {
-            alert('No routes found between these locations. Using straight-line distance.');
-            const distance = calculateDistance();
-            updateDistanceDisplay(distance);
-            calculateAll();
-        } else if (status === 'REQUEST_DENIED') {
-            alert('Google Directions API not enabled. Please enable "Directions API" in Google Cloud Console.\n\nUsing straight-line distance for now.');
-            const distance = calculateDistance();
-            updateDistanceDisplay(distance);
-            calculateAll();
+            displayRouteOptions(result.routes);
+            selectRoute(0);
         } else {
-            console.error('Directions request failed:', status);
-            alert('Could not calculate route. Using straight-line distance.');
             const distance = calculateDistance();
             updateDistanceDisplay(distance);
             calculateAll();
         }
     });
+}
+
+// Calculate workshop route (workshop → pickup → delivery → workshop)
+function calculateWorkshopRoute() {
+    if (!workshopCoords || !fromCoords || !toCoords) {
+        return;
+    }
+
+    if (!directionsService) {
+        // Fallback to straight-line calculations
+        const dist1 = calculateDistanceBetween(workshopCoords, fromCoords);
+        const dist2 = calculateDistanceBetween(fromCoords, toCoords);
+        const dist3 = calculateDistanceBetween(toCoords, workshopCoords);
+        const total = dist1 + dist2 + dist3;
+        
+        updateWorkshopDistanceDisplay(dist1, dist2, dist3, total);
+        calculateAll();
+        return;
+    }
+
+    // Calculate workshop to pickup
+    const workshop = new google.maps.LatLng(workshopCoords.lat, workshopCoords.lon);
+    const pickup = new google.maps.LatLng(fromCoords.lat, fromCoords.lon);
+    const delivery = new google.maps.LatLng(toCoords.lat, toCoords.lon);
+
+    // Multi-leg route
+    const request = {
+        origin: workshop,
+        destination: workshop,
+        waypoints: [
+            { location: pickup, stopover: true },
+            { location: delivery, stopover: true }
+        ],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC
+    };
+
+    directionsService.route(request, function(result, status) {
+        if (status === 'OK') {
+            const route = result.routes[0];
+            const legs = route.legs;
+            
+            const dist1 = legs[0].distance.value / 1000; // Workshop to pickup
+            const dist2 = legs[1].distance.value / 1000; // Pickup to delivery
+            const dist3 = legs[2].distance.value / 1000; // Delivery to workshop
+            const total = dist1 + dist2 + dist3;
+            
+            updateWorkshopDistanceDisplay(dist1, dist2, dist3, total);
+            
+            // Display route on map
+            directionsRenderer.setDirections(result);
+            
+            calculateAll();
+        } else {
+            console.error('Workshop route failed:', status);
+            const dist1 = calculateDistanceBetween(workshopCoords, fromCoords);
+            const dist2 = calculateDistanceBetween(fromCoords, toCoords);
+            const dist3 = calculateDistanceBetween(toCoords, workshopCoords);
+            const total = dist1 + dist2 + dist3;
+            
+            updateWorkshopDistanceDisplay(dist1, dist2, dist3, total);
+            calculateAll();
+        }
+    });
+}
+
+// Calculate distance between two points
+function calculateDistanceBetween(coords1, coords2) {
+    const R = 6371;
+    const dLat = toRad(coords2.lat - coords1.lat);
+    const dLon = toRad(coords2.lon - coords1.lon);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(coords1.lat)) * Math.cos(toRad(coords2.lat)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Update workshop distance display
+function updateWorkshopDistanceDisplay(dist1, dist2, dist3, total) {
+    document.getElementById('workshopToPickup').textContent = `${dist1.toFixed(2)} km`;
+    document.getElementById('pickupToDelivery').textContent = `${dist2.toFixed(2)} km`;
+    document.getElementById('returnToWorkshop').textContent = `${dist3.toFixed(2)} km`;
+    document.getElementById('totalDistance').textContent = `${total.toFixed(2)} km`;
+    document.getElementById('distanceValue').textContent = total.toFixed(2);
 }
 
 // Display route options

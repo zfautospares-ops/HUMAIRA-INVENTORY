@@ -33,6 +33,26 @@
             <!-- Location Inputs -->
             <div class="section">
                 <h3>📍 Locations</h3>
+                <div class="route-type-selector">
+                    <label>
+                        <input type="radio" name="routeType" value="simple" checked onchange="toggleRouteType()">
+                        Simple Route (Pickup → Delivery)
+                    </label>
+                    <label>
+                        <input type="radio" name="routeType" value="workshop" onchange="toggleRouteType()">
+                        From Workshop (Workshop → Pickup → Delivery)
+                    </label>
+                </div>
+                
+                <!-- Workshop Location (hidden by default) -->
+                <div id="workshopSection" style="display: none;">
+                    <div class="form-group">
+                        <label>Workshop Location</label>
+                        <input type="text" id="workshopLocation" placeholder="Your workshop address..." value="784 Gopalall Hurbans, Tongaat">
+                        <button class="btn-gps" onclick="getLocation('workshop')">📍 Use GPS</button>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label>From (Pickup)</label>
                     <input type="text" id="fromLocation" placeholder="Start typing address...">
@@ -48,9 +68,32 @@
             <!-- Distance Display -->
             <div class="section result-section">
                 <h3>📏 Distance</h3>
-                <div class="distance-display">
-                    <span class="distance-value" id="distanceValue">0.00</span>
-                    <span class="distance-unit">km</span>
+                <div id="simpleDistance">
+                    <div class="distance-display">
+                        <span class="distance-value" id="distanceValue">0.00</span>
+                        <span class="distance-unit">km</span>
+                    </div>
+                </div>
+                <div id="workshopDistance" style="display: none;">
+                    <div class="distance-breakdown">
+                        <div class="distance-leg">
+                            <span class="leg-label">🏭 Workshop → Pickup:</span>
+                            <span class="leg-value" id="workshopToPickup">0.00 km</span>
+                        </div>
+                        <div class="distance-leg">
+                            <span class="leg-label">🚗 Pickup → Delivery:</span>
+                            <span class="leg-value" id="pickupToDelivery">0.00 km</span>
+                        </div>
+                        <div class="distance-leg">
+                            <span class="leg-label">🔙 Return to Workshop:</span>
+                            <span class="leg-value" id="returnToWorkshop">0.00 km</span>
+                        </div>
+                        <div class="distance-divider"></div>
+                        <div class="distance-leg total-distance">
+                            <span class="leg-label">📊 Total Distance:</span>
+                            <span class="leg-value" id="totalDistance">0.00 km</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="manual-distance">
                     <label>
