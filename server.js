@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 3000;
 // Data file paths
 const DATA_DIR = './data';
 const JOB_CARDS_FILE = path.join(DATA_DIR, 'jobcards.json');
+const SPARES_FILE = path.join(DATA_DIR, 'spares.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -19,6 +20,11 @@ if (!fs.existsSync(DATA_DIR)) {
 // Initialize data file if it doesn't exist
 if (!fs.existsSync(JOB_CARDS_FILE)) {
     fs.writeFileSync(JOB_CARDS_FILE, JSON.stringify([]));
+}
+
+// Initialize spares file if it doesn't exist
+if (!fs.existsSync(SPARES_FILE)) {
+    fs.writeFileSync(SPARES_FILE, JSON.stringify([]));
 }
 
 // Start automatic backup system (every 24 hours)
@@ -34,6 +40,15 @@ function writeJobCards(jobCards) {
     fs.writeFileSync(JOB_CARDS_FILE, JSON.stringify(jobCards, null, 2));
     // Create backup after every write
     backup.createBackup();
+}
+
+function readSpares() {
+    const data = fs.readFileSync(SPARES_FILE, 'utf8');
+    return JSON.parse(data);
+}
+
+function writeSpares(spares) {
+    fs.writeFileSync(SPARES_FILE, JSON.stringify(spares, null, 2));
 }
 
 // Middleware
@@ -145,6 +160,105 @@ app.get('/api/next-job-number', (req, res) => {
         res.json({ jobNumber, nextNumber });
     } catch (error) {
         console.error('Error generating job number:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ===== SPARES INVENTORY API ROUTES =====
+
+// Get all spares
+app.get('/api/spares', (req, res) => {
+    try {
+        const spares = readSpares();
+        spares.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        res.json(spares);
+    } catch (error) {
+        console.error('Error fetching spares:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get single spare
+app.get('/api/spares/:id', (req, res) => {
+    try {
+        const spares = readSpares();
+        const spare = spares.find(s => s.id === req.params.id);
+        
+        if (!spare) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+        
+        res.json(spare);
+    } catch (error) {
+        console.error('Error fetching spare:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add new spare
+app.post('/api/spares', (req, res) => {
+    try {
+        const spare = req.body;
+        const spares = readSpares();
+        spares.push(spare);
+        writeSpares(spares);
+        res.json({ success: true, id: spare.id });
+    } catch (error) {
+        console.error('Error adding spare:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update spare
+app.put('/api/spares/:id', (req, res) => {
+    try {
+        const spares = readSpares();
+        const index = spares.findIndex(s => s.id === req.params.id);
+        
+        if (index === -1) {
+            return res.status(404).json({ success: false, error: 'Item not found' });
+        }
+        
+        spares[index] = req.body;
+        writeSpares(spares);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating spare:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete spare
+app.delete('/api/spares/:id', (req, res) => {
+    try {
+        let spares = readSpares();
+        spares = spares.filter(s => s.id !== req.params.id);
+        writeSpares(spares);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting spare:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get spares stats
+app.get('/api/spares/stats', (req, res) => {
+    try {
+        const spares = readSpares();
+        
+        const totalItems = spares.length;
+        const inStock = spares.filter(s => s.quantity > 0).length;
+        const lowStock = spares.filter(s => s.quantity > 0 && s.quantity <= 2).length;
+        const totalValue = spares.reduce((sum, s) => sum + (s.sellingPrice * s.quantity), 0);
+        
+        res.json({
+            totalItems,
+            inStock,
+            lowStock,
+            totalValue
+        });
+    } catch (error) {
+        console.error('Error fetching spares stats:', error);
         res.status(500).json({ error: error.message });
     }
 });

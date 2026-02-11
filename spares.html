@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Spares Inventory - MH TOWING</title>
+    <link rel="stylesheet" href="spares-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="company-branding">
+                <h1>MH TOWING</h1>
+                <div class="company-contact">
+                    <span>📞 061 453 2160</span>
+                    <span>📍 784 Gopalall Hurbans, Tongaat, KZN</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="admin.html" class="btn-back">← Dashboard</a>
+                <button onclick="showAddItemForm()" class="btn-add">➕ Add Item</button>
+            </div>
+        </header>
+
+        <div class="page-title">
+            <h2>🔧 Truck Spares Inventory</h2>
+            <p>Second-Hand Parts Management</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalItems">0</div>
+                <div class="stat-label">Total Items</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="inStock">0</div>
+                <div class="stat-label">In Stock</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="lowStock">0</div>
+                <div class="stat-label">Low Stock</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalValue">R 0</div>
+                <div class="stat-label">Total Value</div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="filters">
+            <input type="text" id="searchInput" placeholder="🔍 Search by part name, number, or vehicle..." onkeyup="filterItems()">
+            <select id="categoryFilter" onchange="filterItems()">
+                <option value="">All Categories</option>
+                <option value="engine">🔩 Engine Parts</option>
+                <option value="transmission">⚙️ Transmission</option>
+                <option value="suspension">🛞 Suspension</option>
+                <option value="brakes">🛑 Brakes</option>
+                <option value="electrical">⚡ Electrical</option>
+                <option value="body">🚛 Body Parts</option>
+                <option value="interior">🪑 Interior</option>
+                <option value="wheels">🔘 Wheels & Tires</option>
+                <option value="other">📦 Other</option>
+            </select>
+            <select id="stockFilter" onchange="filterItems()">
+                <option value="">All Stock Levels</option>
+                <option value="in-stock">In Stock</option>
+                <option value="low-stock">Low Stock</option>
+                <option value="out-of-stock">Out of Stock</option>
+            </select>
+        </div>
+
+        <!-- Inventory Grid -->
+        <div class="inventory-container" id="inventoryContainer">
+            <div class="loading">Loading inventory...</div>
+        </div>
+
+        <!-- Add/Edit Item Modal -->
+        <div id="itemModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeItemModal()">&times;</span>
+                <h2 id="modalTitle">Add New Item</h2>
+                <form id="itemForm" onsubmit="saveItem(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Part Name *</label>
+                            <input type="text" id="partName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Part Number</label>
+                            <input type="text" id="partNumber">
+                        </div>
+                        <div class="form-group">
+                            <label>Category *</label>
+                            <select id="category" required>
+                                <option value="">Select Category</option>
+                                <option value="engine">Engine Parts</option>
+                                <option value="transmission">Transmission</option>
+                                <option value="suspension">Suspension</option>
+                                <option value="brakes">Brakes</option>
+                                <option value="electrical">Electrical</option>
+                                <option value="body">Body Parts</option>
+                                <option value="interior">Interior</option>
+                                <option value="wheels">Wheels & Tires</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Vehicle Make/Model</label>
+                            <input type="text" id="vehicle" placeholder="e.g., Isuzu NPR, Hino 300">
+                        </div>
+                        <div class="form-group">
+                            <label>Condition *</label>
+                            <select id="condition" required>
+                                <option value="excellent">Excellent</option>
+                                <option value="good">Good</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity *</label>
+                            <input type="number" id="quantity" min="0" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Cost Price (R)</label>
+                            <input type="number" id="costPrice" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Selling Price (R) *</label>
+                            <input type="number" id="sellingPrice" min="0" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Location/Shelf</label>
+                            <input type="text" id="location" placeholder="e.g., Shelf A3, Bay 2">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Description/Notes</label>
+                            <textarea id="description" rows="3" placeholder="Additional details about the part..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Photo (Optional)</label>
+                            <input type="file" id="photo" accept="image/*" onchange="previewPhoto(event)">
+                            <div id="photoPreview"></div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeItemModal()" class="btn-cancel">Cancel</button>
+                        <button type="submit" class="btn-save">Save Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View Item Details Modal -->
+        <div id="viewModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeViewModal()">&times;</span>
+                <div id="viewModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="spares.js"></script>
+</body>
+</html>

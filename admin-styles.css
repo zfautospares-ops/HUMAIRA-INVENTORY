@@ -528,3 +528,23 @@ body {
         justify-content: flex-end;
     }
 }
+
+.btn-spares {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    background: #ff9800;
+    color: white;
+    transition: all 0.3s;
+}
+
+.btn-spares:hover {
+    background: #f57c00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255,152,0,0.4);
+}
