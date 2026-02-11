@@ -78,6 +78,9 @@ function initAutocomplete() {
                 fromInput.value = place.formatted_address || place.name;
                 console.log('From coords:', fromCoords);
                 calculateRoutes();
+            } else if (place.name) {
+                // Fallback: geocode the address
+                geocodeAddress(place.name, 'from');
             }
         });
 
@@ -92,6 +95,9 @@ function initAutocomplete() {
                 toInput.value = place.formatted_address || place.name;
                 console.log('To coords:', toCoords);
                 calculateRoutes();
+            } else if (place.name) {
+                // Fallback: geocode the address
+                geocodeAddress(place.name, 'to');
             }
         });
 
@@ -106,13 +112,74 @@ function initAutocomplete() {
                 workshopInput.value = place.formatted_address || place.name;
                 console.log('Workshop coords:', workshopCoords);
                 calculateRoutes();
+            } else if (place.name) {
+                // Fallback: geocode the address
+                geocodeAddress(place.name, 'workshop');
             }
         });
+
+        // Geocode existing addresses on load
+        if (workshopInput.value) {
+            geocodeAddress(workshopInput.value, 'workshop');
+        }
 
         console.log('Google Maps autocomplete initialized successfully!');
     } catch (error) {
         console.error('Error initializing Google Maps:', error);
     }
+}
+
+// Manual calculate button
+function manualCalculate() {
+    // Try to geocode all addresses
+    const workshopAddr = document.getElementById('workshopLocation').value;
+    const fromAddr = document.getElementById('fromLocation').value;
+    const toAddr = document.getElementById('toLocation').value;
+    
+    if (isWorkshopRoute && workshopAddr) {
+        geocodeAddress(workshopAddr, 'workshop');
+    }
+    if (fromAddr) {
+        geocodeAddress(fromAddr, 'from');
+    }
+    if (toAddr) {
+        geocodeAddress(toAddr, 'to');
+    }
+    
+    // Wait a bit for geocoding, then calculate
+    setTimeout(() => {
+        calculateRoutes();
+    }, 1500);
+}
+
+// Geocode address to get coordinates
+function geocodeAddress(address, type) {
+    if (!google || !google.maps) return;
+    
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ address: address, region: 'za' }, function(results, status) {
+        if (status === 'OK' && results[0]) {
+            const location = results[0].geometry.location;
+            const coords = {
+                lat: location.lat(),
+                lon: location.lng()
+            };
+            
+            console.log(`Geocoded ${type}:`, coords);
+            
+            if (type === 'from') {
+                fromCoords = coords;
+            } else if (type === 'to') {
+                toCoords = coords;
+            } else if (type === 'workshop') {
+                workshopCoords = coords;
+            }
+            
+            calculateRoutes();
+        } else {
+            console.error('Geocoding failed:', status);
+        }
+    });
 }
 
 // Toggle route type
