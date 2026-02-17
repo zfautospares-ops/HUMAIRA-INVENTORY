@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0a0e27">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>MH Auto Pro - Complete Business Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- QR Code Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <canvas id="particles" class="particles-canvas"></canvas>
+    
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-badge">24HR</div>
+                <div>
+                    <h1>MH AUTO</h1>
+                    <p>Heavy Duty Recovery Specialists</p>
+                </div>
+            </div>
+            
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+            
+            <!-- Navigation Dropdown -->
+            <nav class="nav-dropdown">
+                <button class="nav-dropdown-btn" onclick="toggleNavDropdown()">
+                    <span class="current-page-icon">📏</span>
+                    <span class="current-page-name">Calculator</span>
+                    <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="nav-dropdown-menu" id="navDropdownMenu">
+                    <button class="nav-dropdown-item active" onclick="selectPage('calculator', '📏', 'Calculator')">
+                        <span class="item-icon">📏</span>
+                        <span class="item-name">Calculator</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('customers', '👥', 'Customers')">
+                        <span class="item-icon">👥</span>
+                        <span class="item-name">Customers</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('jobs', '📋', 'Jobs')">
+                        <span class="item-icon">📋</span>
+                        <span class="item-name">Jobs</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('drivers', '🚗', 'Drivers')">
+                        <span class="item-icon">🚗</span>
+                        <span class="item-name">Drivers</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('fleet', '🚛', 'Fleet')">
+                        <span class="item-icon">🚛</span>
+                        <span class="item-name">Fleet</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('invoices', '🧾', 'Invoices')">
+                        <span class="item-icon">🧾</span>
+                        <span class="item-name">Invoices</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('expenses', '💵', 'Expenses')">
+                        <span class="item-icon">💵</span>
+                        <span class="item-name">Expenses</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('analytics', '📊', 'Analytics')">
+                        <span class="item-icon">📊</span>
+                        <span class="item-name">Analytics</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                    <button class="nav-dropdown-item" onclick="selectPage('settings', '⚙️', 'Settings')">
+                        <span class="item-icon">⚙️</span>
+                        <span class="item-name">Settings</span>
+                        <span class="item-check">✓</span>
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Customers Page -->
+        <div id="customersPage" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>👥 Customers</h2>
+                    <button class="icon-btn add-btn" onclick="addCustomer()">
+                        <span>➕</span> Add Customer
+                    </button>
+                </div>
+                <div id="customersList" class="customers-list"></div>
+            </div>
+        </div>
+
+        <!-- Jobs Page -->
+        <div id="jobsPage" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Jobs</h2>
+                    <button class="icon-btn add-btn" onclick="createJob()">
+                        <span>➕</span> New Job
+                    </button>
+                </div>
+                <div id="jobsList" class="jobs-list"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analyticsPage" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Analytics</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="analyticsRange" onchange="loadAnalytics()">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="365">Last Year</option>
+                        </select>
+                        <button class="icon-btn" onclick="clearAllAnalytics()" style="background: #ff4444; border: none;" title="Clear All Data">
+                            <span>🗑️</span> Clear All
+                        </button>
+                    </div>
+                </div>
+                <div id="analyticsContent"></div>
+            </div>
+        </div>
+
+        <!-- Calculator Page -->
+        <div id="calculatorPage" class="page active">
+        
+        <!-- Vehicle Type Selection -->
+        <div class="card">
+            <div class="card-header collapsible" onclick="toggleSection('vehicleTypeSection')">
+                <h2>🚛 My Tow Trucks</h2>
+                <div class="header-actions">
+                    <button class="icon-btn add-btn" onclick="event.stopPropagation(); openAddVehicleModal()" title="Add Vehicle">
+                        <span>➕</span>
+                        <span class="btn-text">Add Vehicle</span>
+                    </button>
+                    <button class="icon-btn edit-btn" onclick="event.stopPropagation(); toggleEditMode()" title="Edit Vehicles">
+                        <span>✏️</span>
+                    </button>
+                    <span class="collapse-icon">▼</span>
+                </div>
+            </div>
+            <div id="vehicleTypeSection" class="collapsible-content active">
+            <div id="vehicleTypes" class="vehicle-grid"></div>
+            
+            <!-- Return Trip Toggle -->
+            <div class="return-trip-toggle">
+                <input type="checkbox" id="returnTrip" checked>
+                <label for="returnTrip" class="toggle-label">
+                    <span class="toggle-icon">🔄</span>
+                    <span class="toggle-text">Return Trip</span>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            </div>
+        </div>
+
+        <!-- Distance Calculator -->
+        <div class="card">
+            <div class="card-header collapsible" onclick="toggleSection('distanceSection')">
+                <h2>📍 Distance Calculator</h2>
+                <span class="collapse-icon">▼</span>
+            </div>
+            
+            <div id="distanceSection" class="collapsible-content active">
+            
+            <!-- Start from Yard Toggle -->
+            <div class="return-trip-toggle" style="margin-bottom: 20px;">
+                <input type="checkbox" id="startFromYard" onchange="toggleYardStart()">
+                <label for="startFromYard" class="toggle-label">
+                    <span class="toggle-icon">🏠</span>
+                    <span class="toggle-text">Start from Yard</span>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="input-group">
+                <label>Start Location</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="startInput" placeholder="Enter pickup location..." autocomplete="off">
+                    <div id="startSuggestions" class="suggestions"></div>
+                </div>
+                <button class="gps-btn" onclick="useGPS('start')">
+                    <span>📍</span> Use Current Location
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label>End Location</label>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="endInput" placeholder="Enter destination..." autocomplete="off">
+                    <div id="endSuggestions" class="suggestions"></div>
+                </div>
+                <button class="gps-btn" onclick="useGPS('end')">
+                    <span>📍</span> Use Current Location
+                </button>
+            </div>
+
+            <button class="calc-btn" onclick="calculateDistance()">
+                <span>📏</span> Calculate Distance
+            </button>
+            </div>
+        </div>
+
+        <!-- Advanced Options -->
+        <div class="card">
+            <div class="card-header collapsible" onclick="toggleSection('advancedOptions')">
+                <h2>⚙️ Advanced Options</h2>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div id="advancedOptions" class="collapsible-content">
+                
+                <!-- Time Surcharge -->
+                <div class="input-group">
+                    <label>Time Surcharge</label>
+                    <select id="timeSurcharge" onchange="updateCalculation()">
+                        <option value="0">Normal Hours</option>
+                        <option value="25">After Hours (+25%)</option>
+                        <option value="50">Weekend (+50%)</option>
+                        <option value="75">Holiday (+75%)</option>
+                        <option value="100">Emergency (+100%)</option>
+                    </select>
+                </div>
+
+                <!-- Fuel Cost Calculator -->
+                <div class="service-card">
+                    <div class="service-header">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fuelCostEnabled" onchange="toggleFuelCost()">
+                            <span class="checkmark"></span>
+                            <span class="service-title">⛽ Fuel Cost Breakdown</span>
+                        </label>
+                    </div>
+                    
+                    <div id="fuelCostDetails" class="fuel-details" style="display: none;">
+                        <div class="fuel-section">
+                            <h4>⛽ Fuel Information</h4>
+                            <div class="fuel-grid">
+                                <div class="input-group">
+                                    <label>Fuel Price (R/L)</label>
+                                    <input type="number" id="fuelPrice" value="24.50" min="1" step="0.10" onchange="updateFuelCost()">
+                                </div>
+                                <div class="input-group">
+                                    <label>Consumption (L/100km)</label>
+                                    <input type="number" id="fuelConsumption" value="15" min="1" step="0.5" onchange="updateFuelCost()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fuel-section">
+                            <h4>📊 Fuel Calculation</h4>
+                            <div class="fuel-breakdown">
+                                <div class="fuel-item">
+                                    <span>Distance:</span>
+                                    <span id="fuelDistance">0 km</span>
+                                </div>
+                                <div class="fuel-item">
+                                    <span>Fuel Used:</span>
+                                    <span id="fuelUsed">0 L</span>
+                                </div>
+                                <div class="fuel-item">
+                                    <span>Fuel Cost:</span>
+                                    <span id="fuelCostAmount" class="fuel-cost-highlight">R 0.00</span>
+                                </div>
+                                <div class="fuel-item">
+                                    <span>Profit Margin:</span>
+                                    <span id="fuelProfit" class="fuel-profit-highlight">R 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="fuel-section">
+                            <h4>💡 Fuel Notes</h4>
+                            <div class="fuel-info">
+                                <p>💰 This shows your actual fuel cost vs. what you're charging</p>
+                                <p>📈 Profit margin = Total charge - Fuel cost</p>
+                                <p>⚙️ Adjust fuel price and consumption for accurate calculations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Winching Service -->
+                <div class="service-card">
+                    <div class="service-header">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="winchingEnabled" onchange="toggleWinching()">
+                            <span class="checkmark"></span>
+                            <span class="service-title">⚙️ Winching Service</span>
+                        </label>
+                    </div>
+                    
+                    <div id="winchingDetails" class="winching-details" style="display: none;">
+                        <!-- Time Tracking -->
+                        <div class="winching-section">
+                            <h4>⏱️ Time Tracking</h4>
+                            <div class="time-grid">
+                                <div class="input-group">
+                                    <label>Start Time</label>
+                                    <input type="time" id="winchStartTime" onchange="calculateWinchingDuration()">
+                                </div>
+                                <div class="input-group">
+                                    <label>End Time</label>
+                                    <input type="time" id="winchEndTime" onchange="calculateWinchingDuration()">
+                                </div>
+                                <div class="input-group">
+                                    <label>Duration (hours)</label>
+                                    <input type="number" id="winchDuration" value="1" min="0.5" step="0.5" onchange="updateWinchingTotal()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rate & Calculation -->
+                        <div class="winching-section">
+                            <h4>💰 Rate & Calculation</h4>
+                            <div class="rate-grid">
+                                <div class="input-group">
+                                    <label>Rate per Hour (R)</label>
+                                    <input type="number" id="winchRate" value="600" min="1" step="50" onchange="updateWinchingTotal()">
+                                    <small style="color: var(--text-secondary); font-size: 0.85em; margin-top: 5px; display: block;">
+                                        💡 Auto-filled from selected vehicle
+                                    </small>
+                                </div>
+                                <div class="winch-total-display">
+                                    <span class="total-label">Total:</span>
+                                    <span id="winchTotalDisplay" class="total-amount">R 1,500</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Details -->
+                        <div class="winching-section">
+                            <h4>📋 Additional Details</h4>
+                            <div class="input-group">
+                                <label>Winching Type</label>
+                                <select id="winchType">
+                                    <option value="vehicle-recovery">Vehicle Recovery</option>
+                                    <option value="ditch-pull">Ditch Pull</option>
+                                    <option value="accident-recovery">Accident Recovery</option>
+                                    <option value="offroad-recovery">Off-Road Recovery</option>
+                                    <option value="heavy-vehicle">Heavy Vehicle</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Difficulty Level</label>
+                                <select id="winchDifficulty" onchange="adjustWinchingRate()">
+                                    <option value="1">Easy (1x)</option>
+                                    <option value="1.5">Medium (+50%)</option>
+                                    <option value="2">Hard (+100%)</option>
+                                    <option value="2.5">Extreme (+150%)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Notes</label>
+                                <textarea id="winchNotes" rows="2" placeholder="Additional details about the winching operation..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prep to Tow -->
+                <div class="service-card">
+                    <div class="service-header">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="prepToTowEnabled" onchange="togglePrepToTow()">
+                            <span class="checkmark"></span>
+                            <span class="service-title">🔧 Prep to Tow</span>
+                        </label>
+                    </div>
+                    
+                    <div id="prepToTowDetails" class="winching-details" style="display: none;">
+                        <div class="winching-section">
+                            <h4>🛠️ Services Required</h4>
+                            
+                            <label class="checkbox-label" style="margin-bottom: 15px;">
+                                <input type="checkbox" id="useUnderlift" onchange="updatePrepToTowTotal()">
+                                <span class="checkmark"></span>
+                                <span>Use of Underlift</span>
+                            </label>
+                            
+                            <label class="checkbox-label" style="margin-bottom: 15px;">
+                                <input type="checkbox" id="removePropshaft" onchange="updatePrepToTowTotal()">
+                                <span class="checkmark"></span>
+                                <span>Remove Propshaft</span>
+                            </label>
+                            
+                            <label class="checkbox-label" style="margin-bottom: 15px;">
+                                <input type="checkbox" id="releaseBrakes" onchange="updatePrepToTowTotal()">
+                                <span class="checkmark"></span>
+                                <span>Release Brakes</span>
+                            </label>
+                        </div>
+
+                        <div class="winching-section">
+                            <h4>💰 Rates</h4>
+                            <div class="input-group">
+                                <label>Underlift Fee (R)</label>
+                                <input type="number" id="underliftFee" value="300" min="0" step="50" onchange="updatePrepToTowTotal()">
+                            </div>
+                            <div class="input-group">
+                                <label>Propshaft Removal Fee (R)</label>
+                                <input type="number" id="propshaftFee" value="400" min="0" step="50" onchange="updatePrepToTowTotal()">
+                            </div>
+                            <div class="input-group">
+                                <label>Brake Release Fee (R)</label>
+                                <input type="number" id="brakesFee" value="200" min="0" step="50" onchange="updatePrepToTowTotal()">
+                            </div>
+                            <div class="winch-total-display">
+                                <div class="total-label">Prep to Tow Cost</div>
+                                <div class="total-amount" id="prepToTowTotal">R 0.00</div>
+                            </div>
+                        </div>
+
+                        <div class="winching-section">
+                            <h4>📋 Notes</h4>
+                            <div class="input-group">
+                                <label>Additional Details</label>
+                                <textarea id="prepToTowNotes" rows="2" placeholder="Any special requirements or notes..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Charges -->
+                <div class="input-group">
+                    <label>Additional Charges</label>
+                    <div id="additionalCharges"></div>
+                    <button class="add-charge-btn" onclick="addCharge()">+ Add Charge</button>
+                </div>
+
+                <!-- Discount -->
+                <div class="discount-section">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Discount</label>
+                            <input type="number" id="discountAmount" value="0" min="0" step="10" onchange="updateCalculation()">
+                        </div>
+                        <div class="input-group">
+                            <label>Type</label>
+                            <select id="discountType" onchange="updateCalculation()">
+                                <option value="fixed">Fixed (R)</option>
+                                <option value="percent">Percent (%)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="input-group">
+                    <label>Notes / Special Instructions</label>
+                    <textarea id="specialNotes" rows="3" placeholder="Any special instructions or notes..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="results-card hidden"></div>
+
+        <!-- Route Map Preview -->
+        <div id="mapPreview" class="map-preview-card hidden">
+            <div class="card-header">
+                <h2>🗺️ Route Preview</h2>
+                <button class="icon-btn" onclick="toggleTraffic()">
+                    <span id="trafficIcon">🚦</span> Traffic
+                </button>
+            </div>
+            <div id="map" class="map-container"></div>
+            <div class="map-legend">
+                <span class="legend-item"><span class="dot green"></span> Light Traffic</span>
+                <span class="legend-item"><span class="dot yellow"></span> Moderate</span>
+                <span class="legend-item"><span class="dot red"></span> Heavy</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button onclick="clearAll()" class="action-btn">🗑️ Clear</button>
+            <button onclick="saveQuote()" class="action-btn">💾 Save</button>
+            <button onclick="sendQuote()" class="action-btn">📤 Send</button>
+            <button onclick="shareInternalSummary()" class="action-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📊 Internal</button>
+            <button onclick="printQuote()" class="action-btn">🖨️ Print</button>
+        </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settingsPage" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚙️ Settings</h2>
+                </div>
+                <div class="input-group">
+                    <label>Company Name</label>
+                    <input type="text" id="settingsCompanyName" value="MH AUTO">
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="settingsCompanyPhone" value="061 453 2160">
+                </div>
+                <div class="input-group">
+                    <label>Address</label>
+                    <input type="text" id="settingsCompanyAddress" value="784 Gopalall Hurbans, Tongaat, KZN">
+                </div>
+                <div class="input-group">
+                    <label>🏠 Yard Location (Home Base)</label>
+                    <input type="text" id="settingsYardLocation" placeholder="Enter your yard/depot address">
+                    <small style="color: var(--text-secondary); font-size: 0.85em; margin-top: 5px; display: block;">
+                        💡 This will be used as the starting point for distance calculations
+                    </small>
+                </div>
+                <button class="calc-btn" onclick="saveSettingsPage()">💾 Save Settings</button>
+                
+                <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid var(--border-color);">
+                    <h3 style="margin-bottom: 15px;">💾 Backup & Restore</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9em; margin-bottom: 15px;">
+                        ⚠️ Important: Your vehicle images and settings are stored in your browser. 
+                        Export a backup to prevent data loss if you clear browser data or switch devices.
+                    </p>
+                    <div style="display: grid; gap: 10px;">
+                        <button class="calc-btn" onclick="exportAllData()" style="background: #4CAF50;">
+                            📥 Export Backup
+                        </button>
+                        <button class="calc-btn" onclick="importData()" style="background: #2196F3;">
+                            📤 Import Backup
+                        </button>
+                    </div>
+                    <small style="color: var(--text-secondary); font-size: 0.85em; margin-top: 10px; display: block;">
+                        💡 Tip: Export a backup after adding vehicle images or changing settings
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Vehicle Modal -->
+    <div id="editVehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Vehicle</h3>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-upload-section">
+                    <div id="vehicleImagePreview" class="image-preview" onclick="document.getElementById('vehicleImageInput').click()">
+                        <span class="upload-icon">📷</span>
+                        <span class="upload-text">Click to upload image</span>
+                        <span class="upload-subtext">Max 5MB • Auto-compressed</span>
+                    </div>
+                    <input type="file" id="vehicleImageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                    <button id="removeImageBtn" class="remove-image-btn" onclick="removeVehicleImage()" style="display: none;">Remove Image</button>
+                </div>
+                <div class="input-group">
+                    <label>Vehicle Name</label>
+                    <input type="text" id="editVehicleName" placeholder="e.g., Flatbed Truck">
+                </div>
+                <div class="input-group">
+                    <label>Rate per KM (R)</label>
+                    <input type="number" id="editVehicleRate" min="1" step="0.5">
+                </div>
+                <div class="input-group">
+                    <label>⛽ Fuel Consumption (km/L)</label>
+                    <input type="number" id="editVehicleConsumption" min="1" step="0.1" placeholder="e.g., 8.5">
+                    <small style="color: var(--text-secondary); font-size: 0.85em; margin-top: 5px; display: block;">
+                        💡 How many kilometers per liter of fuel
+                    </small>
+                </div>
+                <div class="input-group">
+                    <label>📞 Call-Out Fee (R)</label>
+                    <input type="number" id="editVehicleCallOutFee" min="0" step="50" placeholder="e.g., 500">
+                    <small style="color: var(--text-secondary); font-size: 0.85em; margin-top: 5px; display: block;">
+                        💡 Fixed fee charged for dispatching this vehicle
+                    </small>
+                </div>
+                <div class="input-group">
+                    <label>⚙️ Winching Rate (R/hour)</label>
+                    <input type="number" id="editVehicleWinchingRate" min="0" step="50" placeholder="e.g., 600">
+                    <small style="color: var(--text-secondary); font-size: 0.85em; margin-top: 5px; display: block;">
+                        💡 Default hourly rate for winching operations
+                    </small>
+                </div>
+                <div class="input-group" id="emojiGroup">
+                    <label>Emoji (optional if image uploaded)</label>
+                    <input type="text" id="editVehicleEmoji" placeholder="🚛" maxlength="2">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                <button onclick="saveVehicleEdit()" class="btn-primary">Save</button>
+                <button id="deleteVehicleBtn" onclick="deleteVehicle()" class="btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Customer</h3>
+                <button class="close-btn" onclick="closeCustomerModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customerName" placeholder="Full Name">
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="text" id="customerPhone" placeholder="Phone">
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="customerEmail" placeholder="Email (optional)">
+                </div>
+                <div class="input-group">
+                    <label>Address</label>
+                    <textarea id="customerAddress" rows="2" placeholder="Address"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeCustomerModal()" class="btn-secondary">Cancel</button>
+                <button onclick="saveCustomer()" class="btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="footer-logo">🚛</span>
+                <span class="footer-text">MH AUTO Pro v2.0</span>
+            </div>
+            <div class="footer-divider"></div>
+            <div class="footer-credit">
+                <span class="credit-text">Created by</span>
+                <span class="credit-name">H. Hassim</span>
+            </div>
+            <div class="footer-year">© 2024</div>
+        </div>
+    </footer>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyArc6Vzj2uzOK29RVvIJePIN9bS6yLPv1E&libraries=places"></script>
+    <script src="api.js"></script>
+    <script src="enhanced-results.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

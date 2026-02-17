@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "../heroui-plugin.js";
+
+@theme {
+  --color-primary: #FFD700;
+  --color-secondary: #1E1E1E;
+  --color-accent: #FF5722;
+  --color-dark: #121212;
+
+  --font-sans: Roboto, sans-serif;
+  --font-mono: "Chakra Petch", monospace;
+}
+
+body {
+  @apply bg-dark text-white font-sans min-h-screen;
+  background-image: radial-gradient(#222 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Custom Hero UI overrides if needed */
+.heroui-card {
+  @apply bg-secondary/80 border-gray-800 shadow-xl;
+}

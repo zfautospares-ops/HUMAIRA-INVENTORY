@@ -1,0 +1,238 @@
+<!-- NEW PAGES TO ADD TO INDEX.HTML -->
+
+<!-- Drivers Page -->
+<div id="driversPage" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h2>🚗 Drivers</h2>
+            <button class="icon-btn add-btn" onclick="addDriver()">
+                <span>➕</span> Add Driver
+            </button>
+        </div>
+        <div class="drivers-grid" id="driversList"></div>
+    </div>
+</div>
+
+<!-- Fleet Page -->
+<div id="fleetPage" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h2>🚛 Fleet Management</h2>
+            <button class="icon-btn add-btn" onclick="addVehicleToFleet()">
+                <span>➕</span> Add Vehicle
+            </button>
+        </div>
+        <div class="fleet-grid" id="fleetList"></div>
+    </div>
+</div>
+
+<!-- Invoices Page -->
+<div id="invoicesPage" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h2>🧾 Invoices</h2>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="filterInvoices('all')">All</button>
+                <button class="icon-btn" onclick="filterInvoices('paid')">Paid</button>
+                <button class="icon-btn" onclick="filterInvoices('unpaid')">Unpaid</button>
+                <button class="icon-btn" onclick="filterInvoices('overdue')">Overdue</button>
+            </div>
+        </div>
+        <div id="invoicesList" class="invoices-list"></div>
+    </div>
+</div>
+
+<!-- Expenses Page -->
+<div id="expensesPage" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h2>💵 Expenses</h2>
+            <button class="icon-btn add-btn" onclick="addExpense()">
+                <span>➕</span> Add Expense
+            </button>
+        </div>
+        
+        <!-- Expense Summary -->
+        <div class="expense-summary">
+            <div class="summary-card">
+                <span class="summary-label">This Month</span>
+                <span class="summary-value" id="expenseThisMonth">R 0.00</span>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">Last Month</span>
+                <span class="summary-value" id="expenseLastMonth">R 0.00</span>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">This Year</span>
+                <span class="summary-value" id="expenseThisYear">R 0.00</span>
+            </div>
+        </div>
+        
+        <div id="expensesList" class="expenses-list"></div>
+    </div>
+</div>
+
+<!-- Enhanced Settings Page -->
+<div id="settingsPage" class="page">
+    <div class="card">
+        <div class="card-header">
+            <h2>⚙️ Settings</h2>
+        </div>
+        
+        <!-- Company Settings -->
+        <div class="settings-section">
+            <h3>🏢 Company Information</h3>
+            <div class="input-group">
+                <label>Company Name</label>
+                <input type="text" id="settingsCompanyName" value="MH AUTO">
+            </div>
+            <div class="input-group">
+                <label>Phone Number</label>
+                <input type="text" id="settingsCompanyPhone" value="061 453 2160">
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="settingsCompanyEmail" value="info@mhauto.co.za">
+            </div>
+            <div class="input-group">
+                <label>Address</label>
+                <input type="text" id="settingsCompanyAddress" value="784 Gopalall Hurbans, Tongaat, KZN">
+            </div>
+            <div class="input-group">
+                <label>VAT Number</label>
+                <input type="text" id="settingsVatNumber" placeholder="Optional">
+            </div>
+            <div class="input-group">
+                <label>Registration Number</label>
+                <input type="text" id="settingsRegNumber" placeholder="Optional">
+            </div>
+        </div>
+
+        <!-- Payment Settings -->
+        <div class="settings-section">
+            <h3>💳 Payment Settings</h3>
+            <div class="input-group">
+                <label>PayFast Merchant ID</label>
+                <input type="text" id="payfastMerchantId" placeholder="Enter Merchant ID">
+            </div>
+            <div class="input-group">
+                <label>PayFast Merchant Key</label>
+                <input type="password" id="payfastMerchantKey" placeholder="Enter Merchant Key">
+            </div>
+            <div class="input-group">
+                <label>Bank Name</label>
+                <input type="text" id="bankName" placeholder="e.g., FNB">
+            </div>
+            <div class="input-group">
+                <label>Account Number</label>
+                <input type="text" id="bankAccount" placeholder="Account Number">
+            </div>
+            <div class="input-group">
+                <label>Branch Code</label>
+                <input type="text" id="branchCode" placeholder="Branch Code">
+            </div>
+        </div>
+
+        <!-- SMS Settings -->
+        <div class="settings-section">
+            <h3>📱 SMS Notifications</h3>
+            <div class="input-group">
+                <label>SMS Provider</label>
+                <select id="smsProvider">
+                    <option value="none">Disabled</option>
+                    <option value="twilio">Twilio</option>
+                    <option value="africastalking">Africa's Talking</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>API Key</label>
+                <input type="password" id="smsApiKey" placeholder="Enter API Key">
+            </div>
+            <div class="input-group">
+                <label>Sender ID</label>
+                <input type="text" id="smsSenderId" placeholder="e.g., MHAUTO">
+            </div>
+        </div>
+
+        <!-- Invoice Settings -->
+        <div class="settings-section">
+            <h3>🧾 Invoice Settings</h3>
+            <div class="input-group">
+                <label>Invoice Prefix</label>
+                <input type="text" id="invoicePrefix" value="INV" placeholder="e.g., INV">
+            </div>
+            <div class="input-group">
+                <label>Next Invoice Number</label>
+                <input type="number" id="nextInvoiceNumber" value="1001">
+            </div>
+            <div class="input-group">
+                <label>Payment Terms (days)</label>
+                <input type="number" id="paymentTerms" value="7">
+            </div>
+            <div class="input-group">
+                <label>VAT Rate (%)</label>
+                <input type="number" id="vatRate" value="15" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Invoice Footer</label>
+                <textarea id="invoiceFooter" rows="3" placeholder="Thank you for your business!">Thank you for choosing MH AUTO. We appreciate your business!</textarea>
+            </div>
+        </div>
+
+        <!-- Language Settings -->
+        <div class="settings-section">
+            <h3>🌍 Language & Localization</h3>
+            <div class="input-group">
+                <label>Default Language</label>
+                <select id="defaultLanguage">
+                    <option value="en">English</option>
+                    <option value="zu">Zulu</option>
+                    <option value="af">Afrikaans</option>
+                    <option value="xh">Xhosa</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Currency</label>
+                <select id="currency">
+                    <option value="ZAR">ZAR (R)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Date Format</label>
+                <select id="dateFormat">
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Backup Settings -->
+        <div class="settings-section">
+            <h3>💾 Backup & Data</h3>
+            <div class="input-group">
+                <label>Auto Backup</label>
+                <select id="autoBackup">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="disabled">Disabled</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Backup Retention (days)</label>
+                <input type="number" id="backupRetention" value="30">
+            </div>
+            <button class="calc-btn" onclick="createBackupNow()">
+                <span>💾</span> Create Backup Now
+            </button>
+            <button class="calc-btn" onclick="exportAllData()" style="margin-top: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-dark));">
+                <span>📥</span> Export All Data
+            </button>
+        </div>
+
+        <button class="calc-btn" onclick="saveAllSettings()">💾 Save All Settings</button>
+    </div>
+</div>
