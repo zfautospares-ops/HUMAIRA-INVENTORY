@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00d084">
+    <title>MH Towing - Management Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>🚛 MH TOWING</h2>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" onclick="showSection('dashboard')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('live-tracking')">
+                <span class="nav-icon">📍</span>
+                <span class="nav-text">Live Tracking</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('bookings')">
+                <span class="nav-icon">📅</span>
+                <span class="nav-text">Bookings</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('jobs')">
+                <span class="nav-icon">🚛</span>
+                <span class="nav-text">Active Jobs</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('dispatch')">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-text">Dispatch</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('fleet')">
+                <span class="nav-icon">🚗</span>
+                <span class="nav-text">Fleet</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('drivers')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-text">Drivers</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('customers')">
+                <span class="nav-icon">👥</span>
+                <span class="nav-text">Customers</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('invoices')">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">Invoices</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('payments')">
+                <span class="nav-icon">💳</span>
+                <span class="nav-text">Payments</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('expenses')">
+                <span class="nav-icon">📉</span>
+                <span class="nav-text">Expenses</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('analytics')">
+                <span class="nav-icon">📈</span>
+                <span class="nav-text">Analytics</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('reports')">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">Reports</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('communications')">
+                <span class="nav-icon">💬</span>
+                <span class="nav-text">Communications</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showSection('settings')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">Settings</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">MH</div>
+                <div class="user-details">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Manager</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                <h1 id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="top-bar-right">
+                <button class="theme-toggle" onclick="toggleDarkMode()">🌙</button>
+                <button class="notification-btn" onclick="showNotifications()">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card" onclick="showSection('jobs')">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="todayJobs">0</div>
+                        <div class="stat-label">Today's Jobs</div>
+                    </div>
+                    <div class="stat-trend up">+12%</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('jobs')">
+                    <div class="stat-icon">🚛</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="activeJobs">0</div>
+                        <div class="stat-label">Active Jobs</div>
+                    </div>
+                    <div class="stat-trend">—</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('payments')">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="todayRevenue">R0</div>
+                        <div class="stat-label">Today's Revenue</div>
+                    </div>
+                    <div class="stat-trend up">+8%</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('customers')">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="avgRating">4.8</div>
+                        <div class="stat-label">Avg Rating</div>
+                    </div>
+                    <div class="stat-trend up">+0.2</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('fleet')">
+                    <div class="stat-icon">🚗</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="availableVehicles">0</div>
+                        <div class="stat-label">Available Vehicles</div>
+                    </div>
+                    <div class="stat-trend">—</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('drivers')">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="activeDrivers">0</div>
+                        <div class="stat-label">Active Drivers</div>
+                    </div>
+                    <div class="stat-trend">—</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('invoices')">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="pendingInvoices">0</div>
+                        <div class="stat-label">Pending Invoices</div>
+                    </div>
+                    <div class="stat-trend down">-3</div>
+                </div>
+                
+                <div class="stat-card" onclick="showSection('expenses')">
+                    <div class="stat-icon">📉</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="monthlyExpenses">R0</div>
+                        <div class="stat-label">Monthly Expenses</div>
+                    </div>
+                    <div class="stat-trend up">+5%</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="openNewBooking()">
+                        ➕ New Booking
+                    </button>
+                    <button class="action-btn" onclick="showSection('live-tracking')">
+                        📍 Live Tracking
+                    </button>
+                    <button class="action-btn" onclick="openQuoteCalculator()">
+                        💵 Quick Quote
+                    </button>
+                    <button class="action-btn" onclick="showSection('dispatch')">
+                        🎯 Dispatch
+                    </button>
+                    <button class="action-btn" onclick="sendWhatsAppQuote()">
+                        💬 WhatsApp Quote
+                    </button>
+                    <button class="action-btn" onclick="showSection('expenses')">
+                        📝 Add Expense
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity & Live Map -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>Recent Jobs</h3>
+                    <div id="recentJobs" class="job-list"></div>
+                </div>
+                
+                <div class="card">
+                    <h3>Live Fleet Map</h3>
+                    <div id="dashboardMap" class="map-container">
+                        <div class="map-placeholder">
+                            <p>🗺️ Live Fleet Tracking</p>
+                            <p class="small">Click "Live Tracking" to view full map</p>
+                            <button class="btn-sm" onclick="showSection('live-tracking')">View Full Map</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Overview -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>This Week's Performance</h3>
+                    <canvas id="weeklyChart" height="200"></canvas>
+                </div>
+                
+                <div class="card">
+                    <h3>Top Drivers</h3>
+                    <div id="topDrivers" class="leaderboard"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Tracking Section -->
+        <div id="live-tracking" class="section">
+            <div class="section-header">
+                <h2>Live Fleet Tracking</h2>
+                <div class="tracking-controls">
+                    <button class="btn-sm" onclick="refreshTracking()">🔄 Refresh</button>
+                    <button class="btn-sm" onclick="toggleTrafficLayer()">🚦 Traffic</button>
+                    <button class="btn-sm" onclick="centerMap()">📍 Center</button>
+                </div>
+            </div>
+            
+            <div class="tracking-layout">
+                <div class="tracking-sidebar">
+                    <h3>Active Vehicles</h3>
+                    <div id="vehicleList" class="vehicle-list"></div>
+                </div>
+                
+                <div class="tracking-map">
+                    <div id="liveMap" class="map-container-large">
+                        <div class="map-placeholder">
+                            <p>🗺️ Google Maps Integration</p>
+                            <p class="small">Add your Google Maps API key in settings</p>
+                            <button class="btn-primary" onclick="showSection('settings')">Configure API Key</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Section -->
+        <div id="bookings" class="section">
+            <div class="section-header">
+                <h2>Bookings</h2>
+                <button class="btn-primary" onclick="openNewBooking()">➕ New Booking</button>
+            </div>
+            
+            <div class="card">
+                <div class="table-controls">
+                    <input type="text" id="bookingSearch" placeholder="Search bookings..." oninput="filterBookings()">
+                    <select id="bookingStatus" onchange="filterBookings()">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="bookingsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Pickup</th>
+                                <th>Dropoff</th>
+                                <th>Date/Time</th>
+                                <th>Vehicle</th>
+                                <th>Status</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Jobs Section -->
+        <div id="jobs" class="section">
+            <div class="section-header">
+                <h2>Active Jobs</h2>
+                <button class="btn-primary" onclick="assignDriver()">👤 Assign Driver</button>
+            </div>
+            
+            <div class="jobs-grid" id="jobsGrid"></div>
+        </div>
+
+        <!-- Fleet Section -->
+        <div id="fleet" class="section">
+            <div class="section-header">
+                <h2>Fleet Management</h2>
+                <button class="btn-primary" onclick="addVehicle()">➕ Add Vehicle</button>
+            </div>
+            
+            <div class="fleet-grid" id="fleetGrid"></div>
+        </div>
+
+        <!-- Drivers Section -->
+        <div id="drivers" class="section">
+            <div class="section-header">
+                <h2>Drivers</h2>
+                <button class="btn-primary" onclick="addDriver()">➕ Add Driver</button>
+            </div>
+            
+            <div class="drivers-grid" id="driversGrid"></div>
+        </div>
+
+        <!-- Customers Section -->
+        <div id="customers" class="section">
+            <div class="section-header">
+                <h2>Customers</h2>
+                <button class="btn-primary" onclick="addCustomer()">➕ Add Customer</button>
+            </div>
+            
+            <div class="card">
+                <div class="table-controls">
+                    <input type="text" id="customerSearch" placeholder="Search customers..." oninput="filterCustomers()">
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="customersTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Total Jobs</th>
+                                <th>Total Spent</th>
+                                <th>Last Job</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Section -->
+        <div id="invoices" class="section">
+            <div class="section-header">
+                <h2>Invoices</h2>
+                <button class="btn-primary" onclick="createInvoice()">➕ Create Invoice</button>
+            </div>
+            
+            <div class="card">
+                <div class="table-controls">
+                    <input type="text" id="invoiceSearch" placeholder="Search invoices..." oninput="filterInvoices()">
+                    <select id="invoiceStatus" onchange="filterInvoices()">
+                        <option value="">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="invoicesTable">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoicesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div id="analytics" class="section">
+            <h2>Analytics & Reports</h2>
+            
+            <div class="analytics-grid">
+                <div class="card">
+                    <h3>Revenue Overview</h3>
+                    <div class="chart-placeholder">📊 Chart Coming Soon</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Jobs by Type</h3>
+                    <div class="chart-placeholder">📈 Chart Coming Soon</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Peak Hours</h3>
+                    <div class="chart-placeholder">⏰ Chart Coming Soon</div>
+                </div>
+                
+                <div class="card">
+                    <h3>Driver Performance</h3>
+                    <div class="chart-placeholder">👤 Chart Coming Soon</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="section">
+            <h2>Settings</h2>
+            
+            <div class="settings-grid">
+                <div class="card">
+                    <h3>Company Information</h3>
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" value="MH Towing">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" value="061 453 2160">
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" value="784 Gopalall Hurbans, Tongaat, KZN">
+                    </div>
+                    <button class="btn-primary">Save Changes</button>
+                </div>
+                
+                <div class="card">
+                    <h3>Pricing Settings</h3>
+                    <div class="form-group">
+                        <label>Base Rate (per km)</label>
+                        <input type="number" value="12">
+                    </div>
+                    <div class="form-group">
+                        <label>After Hours Surcharge (%)</label>
+                        <input type="number" value="25">
+                    </div>
+                    <div class="form-group">
+                        <label>Weekend Surcharge (%)</label>
+                        <input type="number" value="50">
+                    </div>
+                    <button class="btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
